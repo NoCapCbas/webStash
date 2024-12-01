@@ -9,6 +9,31 @@ export type Body_login_login_access_token = {
   client_secret?: string | null
 }
 
+export type BookmarkCreate = {
+  url: string
+  title?: string | null
+  description?: string | null
+}
+
+export type BookmarkPublic = {
+  url: string
+  title?: string | null
+  description?: string | null
+  id: string
+  owner_id: string
+}
+
+export type BookmarksPublic = {
+  data: Array<BookmarkPublic>
+  count: number
+}
+
+export type BookmarkUpdate = {
+  url?: string | null
+  title?: string | null
+  description?: string | null
+}
+
 export type HTTPValidationError = {
   detail?: Array<ValidationError>
 }
@@ -99,6 +124,38 @@ export type ValidationError = {
   msg: string
   type: string
 }
+
+export type BookmarksReadBookmarksData = {
+  limit?: number
+  skip?: number
+}
+
+export type BookmarksReadBookmarksResponse = BookmarksPublic
+
+export type BookmarksCreateBookmarkData = {
+  requestBody: BookmarkCreate
+}
+
+export type BookmarksCreateBookmarkResponse = BookmarkPublic
+
+export type BookmarksReadBookmarkData = {
+  id: string
+}
+
+export type BookmarksReadBookmarkResponse = BookmarkPublic
+
+export type BookmarksUpdateBookmarkData = {
+  id: string
+  requestBody: BookmarkUpdate
+}
+
+export type BookmarksUpdateBookmarkResponse = BookmarkPublic
+
+export type BookmarksDeleteBookmarkData = {
+  id: string
+}
+
+export type BookmarksDeleteBookmarkResponse = Message
 
 export type ItemsReadItemsData = {
   limit?: number

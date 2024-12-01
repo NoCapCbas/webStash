@@ -4,6 +4,16 @@ import type { CancelablePromise } from "./core/CancelablePromise"
 import { OpenAPI } from "./core/OpenAPI"
 import { request as __request } from "./core/request"
 import type {
+  BookmarksReadBookmarksData,
+  BookmarksReadBookmarksResponse,
+  BookmarksCreateBookmarkData,
+  BookmarksCreateBookmarkResponse,
+  BookmarksReadBookmarkData,
+  BookmarksReadBookmarkResponse,
+  BookmarksUpdateBookmarkData,
+  BookmarksUpdateBookmarkResponse,
+  BookmarksDeleteBookmarkData,
+  BookmarksDeleteBookmarkResponse,
   ItemsReadItemsData,
   ItemsReadItemsResponse,
   ItemsCreateItemData,
@@ -45,6 +55,127 @@ import type {
   UtilsTestEmailResponse,
   UtilsHealthCheckResponse,
 } from "./types.gen"
+
+export class BookmarksService {
+  /**
+   * Read Bookmarks
+   * Retrieve bookmarks.
+   * @param data The data for the request.
+   * @param data.skip
+   * @param data.limit
+   * @returns BookmarksPublic Successful Response
+   * @throws ApiError
+   */
+  public static readBookmarks(
+    data: BookmarksReadBookmarksData = {},
+  ): CancelablePromise<BookmarksReadBookmarksResponse> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/api/v1/bookmarks/",
+      query: {
+        skip: data.skip,
+        limit: data.limit,
+      },
+      errors: {
+        422: "Validation Error",
+      },
+    })
+  }
+
+  /**
+   * Create Bookmark
+   * Create new bookmark.
+   * @param data The data for the request.
+   * @param data.requestBody
+   * @returns BookmarkPublic Successful Response
+   * @throws ApiError
+   */
+  public static createBookmark(
+    data: BookmarksCreateBookmarkData,
+  ): CancelablePromise<BookmarksCreateBookmarkResponse> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/api/v1/bookmarks/",
+      body: data.requestBody,
+      mediaType: "application/json",
+      errors: {
+        422: "Validation Error",
+      },
+    })
+  }
+
+  /**
+   * Read Bookmark
+   * Get bookmark by ID.
+   * @param data The data for the request.
+   * @param data.id
+   * @returns BookmarkPublic Successful Response
+   * @throws ApiError
+   */
+  public static readBookmark(
+    data: BookmarksReadBookmarkData,
+  ): CancelablePromise<BookmarksReadBookmarkResponse> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/api/v1/bookmarks/{id}",
+      path: {
+        id: data.id,
+      },
+      errors: {
+        422: "Validation Error",
+      },
+    })
+  }
+
+  /**
+   * Update Bookmark
+   * Update a bookmark.
+   * @param data The data for the request.
+   * @param data.id
+   * @param data.requestBody
+   * @returns BookmarkPublic Successful Response
+   * @throws ApiError
+   */
+  public static updateBookmark(
+    data: BookmarksUpdateBookmarkData,
+  ): CancelablePromise<BookmarksUpdateBookmarkResponse> {
+    return __request(OpenAPI, {
+      method: "PUT",
+      url: "/api/v1/bookmarks/{id}",
+      path: {
+        id: data.id,
+      },
+      body: data.requestBody,
+      mediaType: "application/json",
+      errors: {
+        422: "Validation Error",
+      },
+    })
+  }
+
+  /**
+   * Delete Bookmark
+   * Delete a bookmark.
+   * @param data The data for the request.
+   * @param data.id
+   * @returns Message Successful Response
+   * @throws ApiError
+   */
+  public static deleteBookmark(
+    data: BookmarksDeleteBookmarkData,
+  ): CancelablePromise<BookmarksDeleteBookmarkResponse> {
+    return __request(OpenAPI, {
+      method: "DELETE",
+      url: "/api/v1/bookmarks/{id}",
+      path: {
+        id: data.id,
+      },
+      errors: {
+        422: "Validation Error",
+      },
+    })
+  }
+}
 
 export class ItemsService {
   /**

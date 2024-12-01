@@ -117,32 +117,6 @@ class NewPassword(SQLModel):
 
 # Bookmark Specific Models
 """
-Used to categorize bookmarks
-"""
-class TagBase(SQLModel):
-    name: str = Field(max_length=255)
-
-class TagCreate(TagBase):
-    pass
-
-class TagUpdate(TagBase):
-    name: str | None = Field(default=None, max_length=255)
-
-class Tag(TagBase, table=True):
-    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
-    name: str = Field(max_length=255)
-    owner_id: uuid.UUID = Field(foreign_key="user.id", nullable=False, ondelete="CASCADE")
-    owner: User | None = Relationship(back_populates="tags")
-
-class TagPublic(TagBase):
-    id: uuid.UUID
-    owner_id: uuid.UUID
-
-class TagsPublic(SQLModel):
-    data: list[TagPublic]
-    count: int
-
-"""
 Domain models for bookmarks
 """
 # Shared properties
@@ -167,9 +141,9 @@ class Bookmark(BookmarkBase, table=True):
     url: str = Field(max_length=1000)
     title: str | None = Field(default=None, max_length=50)
     description: str | None = Field(default=None, max_length=1000)
-    tags: list[Tag] = Relationship(back_populates="bookmarks")
     owner_id: uuid.UUID = Field(foreign_key="user.id", nullable=False, ondelete="CASCADE")
     owner: User | None = Relationship(back_populates="bookmarks")
+    tags: list["Tag"] = Relationship(back_populates="bookmark", cascade_delete=True)
 
 # Properties to return via API, id is always required
 class BookmarkPublic(BookmarkBase):
@@ -178,5 +152,33 @@ class BookmarkPublic(BookmarkBase):
 
 class BookmarksPublic(SQLModel):
     data: list[BookmarkPublic]
+    count: int
+
+"""
+Used to categorize bookmarks
+"""
+class TagBase(SQLModel):
+    name: str = Field(max_length=255)
+
+class TagCreate(TagBase):
+    pass
+
+class TagUpdate(TagBase):
+    name: str | None = Field(default=None, max_length=255)
+
+class Tag(TagBase, table=True):
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    name: str = Field(max_length=255)
+    owner_id: uuid.UUID = Field(foreign_key="user.id", nullable=False, ondelete="CASCADE")
+    owner: User | None = Relationship(back_populates="tags")
+    bookmark_id: uuid.UUID = Field(foreign_key="bookmark.id", nullable=False, ondelete="CASCADE")
+    bookmark: Bookmark | None = Relationship(back_populates="tags")
+
+class TagPublic(TagBase):
+    id: uuid.UUID
+    owner_id: uuid.UUID
+
+class TagsPublic(SQLModel):
+    data: list[TagPublic]
     count: int
 

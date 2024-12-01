@@ -4,6 +4,10 @@ watch-dev:
 watch-prod:
 	docker compose --env-file .env.prod watch
 
+migrate-dev:
+	docker compose exec backend alembic revision --autogenerate -m "$(message)"
+	docker compose exec backend alembic upgrade head
+
 help:
 	@echo "Usage: make <target>"
 	@echo "Targets:"
