@@ -44,6 +44,8 @@ class User(UserBase, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     hashed_password: str
     items: list["Item"] = Relationship(back_populates="owner", cascade_delete=True)
+    tags: list["Tag"] = Relationship(back_populates="owner", cascade_delete=True)
+    bookmarks: list["Bookmark"] = Relationship(back_populates="owner", cascade_delete=True)
 
 
 # Properties to return via API, id is always required
@@ -112,3 +114,69 @@ class TokenPayload(SQLModel):
 class NewPassword(SQLModel):
     token: str
     new_password: str = Field(min_length=8, max_length=40)
+
+# Bookmark Specific Models
+"""
+Used to categorize bookmarks
+"""
+class TagBase(SQLModel):
+    name: str = Field(max_length=255)
+
+class TagCreate(TagBase):
+    pass
+
+class TagUpdate(TagBase):
+    name: str | None = Field(default=None, max_length=255)
+
+class Tag(TagBase, table=True):
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    name: str = Field(max_length=255)
+    owner_id: uuid.UUID = Field(foreign_key="user.id", nullable=False, ondelete="CASCADE")
+    owner: User | None = Relationship(back_populates="tags")
+
+class TagPublic(TagBase):
+    id: uuid.UUID
+    owner_id: uuid.UUID
+
+class TagsPublic(SQLModel):
+    data: list[TagPublic]
+    count: int
+
+"""
+Domain models for bookmarks
+"""
+# Shared properties
+class BookmarkBase(SQLModel):
+    url: str = Field(max_length=1000)
+    title: str | None = Field(default=None, max_length=50)
+    description: str | None = Field(default=None, max_length=1000)
+
+# Properties to receive on bookmark creation
+class BookmarkCreate(BookmarkBase):
+    pass
+
+# Properties to receive on bookmark update
+class BookmarkUpdate(BookmarkBase):
+    url: str | None = Field(default=None, max_length=1000)
+    title: str | None = Field(default=None, max_length=50)
+    description: str | None = Field(default=None, max_length=1000)
+
+# Database model, database table inferred from class name
+class Bookmark(BookmarkBase, table=True):
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    url: str = Field(max_length=1000)
+    title: str | None = Field(default=None, max_length=50)
+    description: str | None = Field(default=None, max_length=1000)
+    tags: list[Tag] = Relationship(back_populates="bookmarks")
+    owner_id: uuid.UUID = Field(foreign_key="user.id", nullable=False, ondelete="CASCADE")
+    owner: User | None = Relationship(back_populates="bookmarks")
+
+# Properties to return via API, id is always required
+class BookmarkPublic(BookmarkBase):
+    id: uuid.UUID
+    owner_id: uuid.UUID
+
+class BookmarksPublic(SQLModel):
+    data: list[BookmarkPublic]
+    count: int
+
