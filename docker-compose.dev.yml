@@ -1,0 +1,14 @@
+version: '3.7'
+
+services: 
+  tabstash:
+    build:
+      context: .
+      dockerfile: dockerfile.dev
+    ports:
+      - "8080:8080"
+    volumes:
+      - .:/app
+    environment:
+      - ENV=development
+    command: go run ./cmd/main.go
