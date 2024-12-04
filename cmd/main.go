@@ -20,14 +20,10 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 		"templates/index.html",
 		"templates/partials/nav.html",
 		"templates/partials/hero.html",
-		"templates/partials/about.html",
-		"templates/partials/skills.html",
-		"templates/partials/projects.html",
-		"templates/partials/contact.html",
-
-		"templates/projects/savviURL.html",
-		"templates/projects/savviVerifyEmail.html",
-		"templates/projects/savviPingPong.html",
+		"templates/partials/features.html",
+		"templates/partials/pricing.html",
+		"templates/partials/footer-cta.html",
+		"templates/partials/footer.html",
 	)
 	if err != nil {
 		log.Println("Error parsing templates: ", err)
