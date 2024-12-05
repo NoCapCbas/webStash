@@ -8,4 +8,6 @@
 - flesh email auth, create session token table, create magic link table, 
 - add stripe for billing
 - review website flow, see if it makes sense
+- if all looks good, deploy to production
+- market, seo, etc
 

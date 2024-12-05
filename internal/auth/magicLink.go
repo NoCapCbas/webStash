@@ -46,10 +46,10 @@ func ValidateMagicLink(token string) (string, error) {
 		return "", errors.New("invalid or expired token")
 	}
 
-	// check expiration
-	if time.Now().After(magicLink.ExpiresAt) {
-		return "", errors.New("invalid or expired token")
-	}
+	// // check expiration
+	// if time.Now().After(magicLink.ExpiresAt) {
+	// 	return "", errors.New("invalid or expired token")
+	// }
 
 	return email, nil
 }
