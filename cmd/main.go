@@ -113,7 +113,6 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 
 func verifyHandler(w http.ResponseWriter, r *http.Request) {
 	log.Println("Verifying magic link")
-	// Get token from URL query parameters
 	token := r.URL.Query().Get("token")
 	if token == "" {
 		http.Error(w, "Missing token", http.StatusBadRequest)
@@ -121,25 +120,48 @@ func verifyHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Validate the magic link token
-	_, err := auth.ValidateMagicLink(token)
+	email, err := auth.ValidateMagicLink(token)
 	if err != nil {
 		log.Printf("Invalid magic link token: %v", err)
 		http.Error(w, "Invalid or expired token", http.StatusUnauthorized)
 		return
 	}
 
-	// Set session cookie
+	// Generate a new session token instead of reusing the magic link token
+	sessionToken, err := auth.GenerateSessionToken(email)
+	if err != nil {
+		log.Printf("Error generating session token: %v", err)
+		http.Error(w, "Error creating session", http.StatusInternalServerError)
+		return
+	}
+
+	// Set session cookie with the new token
 	http.SetCookie(w, &http.Cookie{
 		Name:     "session_token",
-		Value:    token,
+		Value:    sessionToken,
 		Path:     "/",
 		HttpOnly: true,
 		// Secure:   true, // Set to true if using HTTPS
 		MaxAge:   60 * 15, // 15 minutes
-		SameSite: http.SameSiteStrictMode,
+		SameSite: http.SameSiteLaxMode,
 	})
 
 	http.Redirect(w, r, "/account", http.StatusSeeOther)
+	// Add a simple HTML page that automatically redirects
+	// w.Header().Set("Content-Type", "text/html")
+	// fmt.Fprintf(w, `
+	//     <!DOCTYPE html>
+	//     <html>
+	//     <head>
+	//         <title>Redirecting...</title>
+	//         <meta http-equiv="refresh" content="0; url=/account">
+	//     </head>
+	//     <body>
+	//         <p>Redirecting to your account... <a href="/account">Click here</a> if you are not redirected automatically.</p>
+	//         <script>window.location.href = "/account";</script>
+	//     </body>
+	//     </html>
+	// `)
 }
 
 func accountHandler(w http.ResponseWriter, r *http.Request) {
@@ -147,14 +169,16 @@ func accountHandler(w http.ResponseWriter, r *http.Request) {
 
 	sessionTokenCookie, err := r.Cookie("session_token")
 	if err != nil {
-		http.Error(w, "Missing token", http.StatusBadRequest)
+		log.Println("No session token cookie found: ", err)
+		http.Redirect(w, r, "/404", http.StatusSeeOther)
 		return
 	}
 
-	// Validate the magic link token
-	email, err := auth.ValidateMagicLink(sessionTokenCookie.Value)
+	// Use a separate function to validate sessions
+	email, err := auth.ValidateSession(sessionTokenCookie.Value)
 	if err != nil {
-		http.Error(w, "Invalid or expired token", http.StatusUnauthorized)
+		log.Println("Invalid session token: ", err)
+		http.Redirect(w, r, "/404", http.StatusSeeOther)
 		return
 	}
 
@@ -190,6 +214,16 @@ func policiesHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func notFoundHandler(w http.ResponseWriter, r *http.Request) {
+	tmpl, err := template.ParseFiles("templates/404.html")
+	if err != nil {
+		log.Println("Error parsing templates: ", err)
+		http.Error(w, "Could not load template", http.StatusInternalServerError)
+		return
+	}
+	tmpl.Execute(w, nil)
+}
+
 func main() {
 	// Initialize database
 	var err error
@@ -208,7 +242,7 @@ func main() {
 	http.HandleFunc("/verify", verifyHandler)
 	http.HandleFunc("/account", accountHandler)
 	http.HandleFunc("/policies", policiesHandler)
-
+	http.HandleFunc("/404", notFoundHandler)
 	// start server
 	log.Println("Listening on port :8080...")
 	err = http.ListenAndServe(":8080", nil)

@@ -19,9 +19,11 @@ var tempCache = make(map[string]string)
 
 func GenerateMagicLink(email string) (*MagicLink, error) {
 	// Generate random token
+	const letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 	b := make([]byte, 32)
-	if _, err := rand.Read(b); err != nil {
-		return nil, err
+	rand.Read(b)
+	for i := range b {
+		b[i] = letterBytes[int(b[i])%len(letterBytes)]
 	}
 	token := base64.URLEncoding.EncodeToString(b)
 
@@ -43,5 +45,11 @@ func ValidateMagicLink(token string) (string, error) {
 	if !ok {
 		return "", errors.New("invalid or expired token")
 	}
+
+	// check expiration
+	if time.Now().After(magicLink.ExpiresAt) {
+		return "", errors.New("invalid or expired token")
+	}
+
 	return email, nil
 }
