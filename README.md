@@ -1,5 +1,5 @@
 # Project Intention
-This project serves as a minimalist hub to show clients/employers my projects, resume and other code related work.
+This project serves as a bookmarking management software, a hub for users to store their favorite web pages and have access to them from any device with internet access.
 
 # Technology Used to Develop this Project
 - golang
