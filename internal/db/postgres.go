@@ -9,12 +9,7 @@ import (
 )
 
 type PostgresDB struct {
-	db *sql.DB
-}
-
-type User struct {
-	Email          string
-	MembershipType int
+	DB *sql.DB
 }
 
 func NewPostgresDB(connStr string) (*PostgresDB, error) {
@@ -33,29 +28,17 @@ func NewPostgresDB(connStr string) (*PostgresDB, error) {
 		return nil, err
 	}
 
-	return &PostgresDB{db: db}, nil
-}
-
-// CreateUser creates a new user with default membership type 0
-func (p *PostgresDB) CreateUser(email string) error {
-	_, err := p.db.Exec(`
-        INSERT INTO users (email, membership_type) 
-        VALUES ($1, $2)
-        ON CONFLICT (email) DO NOTHING
-    `, email, 0)
-	return err
-}
-
-// GetUser retrieves a user by email
-func (p *PostgresDB) GetUser(email string) (*User, error) {
-	user := &User{}
-	err := p.db.QueryRow(`
-        SELECT email, membership_type 
-        FROM users 
-        WHERE email = $1
-    `, email).Scan(&user.Email, &user.MembershipType)
-	if err == sql.ErrNoRows {
-		return nil, nil
+	if err = seed.CreateSessionsTable(db); err != nil {
+		return nil, err
 	}
-	return user, err
+
+	if err = seed.CreateBookmarksTable(db); err != nil {
+		return nil, err
+	}
+
+	if err = seed.CreateMagicLinksTable(db); err != nil {
+		return nil, err
+	}
+
+	return &PostgresDB{DB: db}, nil
 }

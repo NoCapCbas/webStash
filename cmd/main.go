@@ -7,10 +7,12 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
-	"github.com/NoCapCbas/webStash/internal/auth"
 	"github.com/NoCapCbas/webStash/internal/common"
 	"github.com/NoCapCbas/webStash/internal/db"
+	"github.com/NoCapCbas/webStash/internal/db/repos"
+	"github.com/NoCapCbas/webStash/internal/services"
 )
 
 type PageData struct {
@@ -22,8 +24,18 @@ type LoginRequest struct {
 	Email string `json:"email"`
 }
 
-var postgres *db.PostgresDB
-var templates = template.Must(template.ParseFiles("templates/account/index.html"))
+var (
+	templates = template.Must(
+		template.New("").Funcs(common.FuncMap).ParseFiles(
+			"templates/bookmarks/index.html",
+			"templates/bookmarks/navbar.html",
+			"templates/bookmarks/view.html",
+		),
+	)
+	authService     *services.AuthService
+	mailgunService  services.MailService
+	bookmarkService *services.BookmarkService
+)
 
 func indexHandler(w http.ResponseWriter, r *http.Request) {
 
@@ -69,12 +81,13 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 	var req LoginRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "Invalid request", http.StatusBadRequest)
+
 		return
 	}
 
 	// Generate magic link
 	log.Println("Generating magic link for", req.Email)
-	magicLink, err := auth.GenerateMagicLink(req.Email)
+	magicLink, err := authService.GenerateMagicLink(req.Email)
 	if err != nil {
 		http.Error(w, "Error generating magic link", http.StatusInternalServerError)
 		return
@@ -82,22 +95,19 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Create user if doesn't exist
 	log.Println("Creating user if doesn't exist")
-	if err := postgres.CreateUser(req.Email); err != nil {
+	if err := authService.CreateUser(req.Email); err != nil {
 		log.Println("Error creating user", err)
 		http.Error(w, "Error creating user", http.StatusInternalServerError)
 		return
 	}
-
-	// Initialize Mailgun client
-	mailgunClient := common.NewMailgunClient()
 
 	// Generate the full magic link URL
 	log.Println("Generating full magic link URL")
 	magicLinkURL := fmt.Sprintf("http://localhost:8080/verify?token=%s", magicLink.Token)
 
 	// Send the magic link email
-	log.Println("Sending magic link email", magicLinkURL, mailgunClient)
-	err = mailgunClient.SendMagicLink(req.Email, magicLinkURL)
+	log.Println("Sending magic link email", magicLinkURL, mailgunService)
+	err = mailgunService.SendMagicLink(req.Email, magicLinkURL)
 	if err != nil {
 		log.Printf("Failed to send magic link: %v", err)
 		http.Error(w, "Error sending magic link", http.StatusInternalServerError)
@@ -120,15 +130,15 @@ func verifyHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Validate the magic link token
-	email, err := auth.ValidateMagicLink(token)
+	email, err := authService.ValidateMagicLink(token)
 	if err != nil {
 		log.Printf("Invalid magic link token: %v", err)
-		http.Error(w, "Invalid or expired token", http.StatusUnauthorized)
+		http.Error(w, err.Error(), http.StatusUnauthorized)
 		return
 	}
 
 	// Generate a new session token instead of reusing the magic link token
-	sessionToken, err := auth.GenerateSessionToken(email)
+	sessionToken, err := authService.GenerateSessionToken(email)
 	if err != nil {
 		log.Printf("Error generating session token: %v", err)
 		http.Error(w, "Error creating session", http.StatusInternalServerError)
@@ -142,30 +152,29 @@ func verifyHandler(w http.ResponseWriter, r *http.Request) {
 		Path:     "/",
 		HttpOnly: true,
 		// Secure:   true, // Set to true if using HTTPS
-		MaxAge:   60 * 15, // 15 minutes
+		MaxAge:   60 * 60, // 1 hour
 		SameSite: http.SameSiteLaxMode,
 	})
 
-	http.Redirect(w, r, "/account", http.StatusSeeOther)
-	// Add a simple HTML page that automatically redirects
-	// w.Header().Set("Content-Type", "text/html")
-	// fmt.Fprintf(w, `
-	//     <!DOCTYPE html>
-	//     <html>
-	//     <head>
-	//         <title>Redirecting...</title>
-	//         <meta http-equiv="refresh" content="0; url=/account">
-	//     </head>
-	//     <body>
-	//         <p>Redirecting to your account... <a href="/account">Click here</a> if you are not redirected automatically.</p>
-	//         <script>window.location.href = "/account";</script>
-	//     </body>
-	//     </html>
-	// `)
+	http.Redirect(w, r, "/view/bookmarks", http.StatusSeeOther)
 }
 
-func accountHandler(w http.ResponseWriter, r *http.Request) {
-	log.Println("Account handler")
+type Bookmark struct {
+	ID          string
+	Title       string
+	URL         string
+	Description string
+	Tags        []string
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
+	Public      bool
+	ClickCount  int
+}
+
+var bookmarks []Bookmark
+
+func bookmarkViewHandler(w http.ResponseWriter, r *http.Request) {
+	log.Println("Bookmark view handler")
 
 	sessionTokenCookie, err := r.Cookie("session_token")
 	if err != nil {
@@ -175,18 +184,43 @@ func accountHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Use a separate function to validate sessions
-	email, err := auth.ValidateSession(sessionTokenCookie.Value)
+	email, err := authService.ValidateSession(sessionTokenCookie.Value)
 	if err != nil {
 		log.Println("Invalid session token: ", err)
 		http.Redirect(w, r, "/404", http.StatusSeeOther)
 		return
 	}
+	bookmarks = append(bookmarks, Bookmark{
+		ID:          "1",
+		Title:       "Google",
+		URL:         "https://google.com",
+		Description: "Google's homepage",
+		Tags:        []string{"search", "internet"},
+		CreatedAt:   time.Now(),
+		UpdatedAt:   time.Now(),
+		Public:      false,
+		ClickCount:  0,
+	})
+
+	bookmarks = append(bookmarks, Bookmark{
+		ID:          "2",
+		Title:       "Github",
+		URL:         "https://github.com",
+		Description: "Github's homepage",
+		Tags:        []string{"code", "git"},
+		CreatedAt:   time.Now(),
+		UpdatedAt:   time.Now(),
+		Public:      false,
+		ClickCount:  0,
+	})
 
 	// Render the account template with the email
 	data := struct {
-		Email string
+		Email     string
+		Bookmarks []Bookmark
 	}{
-		Email: email,
+		Email:     email,
+		Bookmarks: bookmarks,
 	}
 
 	if err := templates.ExecuteTemplate(w, "index.html", data); err != nil {
@@ -224,13 +258,73 @@ func notFoundHandler(w http.ResponseWriter, r *http.Request) {
 	tmpl.Execute(w, nil)
 }
 
+func bookmarkCreateHandler(w http.ResponseWriter, r *http.Request) {
+	log.Println("Bookmark create handler")
+	var bookmark repos.Bookmark
+	if err := json.NewDecoder(r.Body).Decode(&bookmark); err != nil {
+		http.Error(w, "Invalid request", http.StatusBadRequest)
+		return
+	}
+	bookmarkService.CreateBookmark(&bookmark)
+}
+
+func bookmarkUpdateHandler(w http.ResponseWriter, r *http.Request) {
+	log.Println("Bookmark update handler")
+	var bookmark repos.Bookmark
+	if err := json.NewDecoder(r.Body).Decode(&bookmark); err != nil {
+		http.Error(w, "Invalid request", http.StatusBadRequest)
+		return
+	}
+	bookmarkService.UpdateBookmark(&bookmark)
+}
+
+func bookmarkDeleteHandler(w http.ResponseWriter, r *http.Request) {
+	log.Println("Bookmark delete handler")
+	var bookmark repos.Bookmark
+	if err := json.NewDecoder(r.Body).Decode(&bookmark); err != nil {
+		http.Error(w, "Invalid request", http.StatusBadRequest)
+		return
+	}
+	bookmarkService.DeleteBookmark(bookmark.ID, bookmark.UserID)
+}
+
+type readBookmarkRequest struct {
+	ID int `json:"id"`
+}
+
+func bookmarkReadHandler(w http.ResponseWriter, r *http.Request) {
+	log.Println("Bookmark read handler")
+	var req readBookmarkRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid request", http.StatusBadRequest)
+		return
+	}
+	bookmark, err := bookmarkService.GetBookmarkByID(req.ID)
+	if err != nil {
+		http.Error(w, "Bookmark not found", http.StatusNotFound)
+		return
+	}
+	json.NewEncoder(w).Encode(bookmark)
+}
+
 func main() {
 	// Initialize database
 	var err error
-	postgres, err = db.NewPostgresDB(os.Getenv("DATABASE_URL"))
+	postgres, err := db.NewPostgresDB(os.Getenv("DATABASE_URL"))
 	if err != nil {
 		log.Fatal("Failed to connect to database:", err)
 	}
+
+	// Initialize repositories
+	bookmarkRepo := repos.NewBookmarkRepo(postgres.DB)
+	userRepo := repos.NewUserRepo(postgres.DB)
+	sessionRepo := repos.NewSessionRepo(postgres.DB)
+	magicLinkRepo := repos.NewMagicLinkRepo(postgres.DB)
+
+	// Initialize services
+	authService = services.NewAuthService(magicLinkRepo, sessionRepo, userRepo)
+	mailgunService = services.NewMailgunService()
+	bookmarkService = services.NewBookmarkService(bookmarkRepo)
 
 	// serve static files
 	fs := http.FileServer(http.Dir("static"))
@@ -240,9 +334,16 @@ func main() {
 	http.HandleFunc("/", indexHandler)
 	http.HandleFunc("/api/login", loginHandler)
 	http.HandleFunc("/verify", verifyHandler)
-	http.HandleFunc("/account", accountHandler)
+	http.HandleFunc("/view/bookmarks", bookmarkViewHandler)
 	http.HandleFunc("/policies", policiesHandler)
 	http.HandleFunc("/404", notFoundHandler)
+
+	// bookmark handlers
+	http.HandleFunc("/api/v1/bookmarks/create", bookmarkCreateHandler)
+	http.HandleFunc("/api/v1/bookmarks/update", bookmarkUpdateHandler)
+	http.HandleFunc("/api/v1/bookmarks/delete", bookmarkDeleteHandler)
+	http.HandleFunc("/api/v1/bookmarks/read", bookmarkReadHandler)
+
 	// start server
 	log.Println("Listening on port :8080...")
 	err = http.ListenAndServe(":8080", nil)
