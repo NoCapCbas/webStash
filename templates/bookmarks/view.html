@@ -1,7 +1,14 @@
 {{define "bookmarks/view"}}
-<section class="w-[80%] mx-auto px-20"
+<section class="w-[80%] mx-auto px-8"
     x-data="{ 
         searchQuery: '',
+        addBookmarkModal: false,
+        newBookmark: {
+            title: '',
+            url: '',
+            description: '',
+            tags: ''
+        },
         filterBookmarks(bookmark) {
             const search = this.searchQuery.toLowerCase();
             if (search === '') return true;
@@ -11,15 +18,40 @@
             return bookmark.title.toLowerCase().includes(search) ||
                    bookmark.description.toLowerCase().includes(search) ||
                    bookmark.tags.some(tag => tag.toLowerCase().includes(search));
+        },
+        async addBookmark() {
+            try {
+                const response = await fetch('/api/v1/bookmarks/create', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(this.newBookmark)
+                });
+                if (response.ok) {
+                    this.addBookmarkModal = false;
+                    // Reset form
+                    this.newBookmark = {
+                        title: '',
+                        url: '',
+                        description: '',
+                        tags: ''
+                    };
+                    // Refresh the page to show new bookmark
+                    window.location.reload();
+                }
+            } catch (error) {
+                console.error('Error adding bookmark:', error);
+            }
         }
     }"
 >
     <!-- Search bar -->
-    <div class="mb-6">
-        <form class="relative" @submit.prevent>
+    <div class="mb-6 flex flex-row justify-center items-center align-items">
+        <form class="relative w-full" @submit.prevent>
             <input type="search" 
                    x-model="searchQuery"
-                   placeholder="Search bookmarks by title..." 
+                   placeholder="Search bookmarks by title, description, or tags..." 
                    class="w-full px-4 py-2 pl-10 pr-4 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                    aria-label="Search bookmarks">
             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -28,7 +60,20 @@
                 </svg>
             </div>
         </form>
+        <!-- Add Bookmark Button -->
+        <div class="flex justify-center items-center px-2 py-2">
+            <button 
+                @click="addBookmarkModal = !addBookmarkModal"
+                class="bg-blue-500 text-white px-2 py-2 rounded-full hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            >
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                </svg>              
+            </button>
+        </div>
+
     </div>
+
 
     <ul role="list" class="divide-y divide-gray-100">
     {{range .Bookmarks}}

@@ -1,4 +1,4 @@
-name: Portfolio
+name: WebStash
 on:
  push:
    branches:
@@ -48,5 +48,5 @@ jobs:
           context: .
           file: dockerfile.prod
           push: true
-          tags: ghcr.io/nocapcbas/portfolio:prod
+          tags: ghcr.io/nocapcbas/webstash:prod
 

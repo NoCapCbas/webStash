@@ -30,6 +30,7 @@ var (
 			"templates/bookmarks/index.html",
 			"templates/bookmarks/navbar.html",
 			"templates/bookmarks/view.html",
+			"templates/bookmarks/add-bookmark.html",
 		),
 	)
 	authService     *services.AuthService
