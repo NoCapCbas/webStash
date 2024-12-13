@@ -30,6 +30,10 @@ func (s *BookmarkService) GetBookmarksByUserID(userID int) ([]repos.Bookmark, er
 	return s.bookmarkRepo.GetByUserID(userID)
 }
 
+func (s *BookmarkService) GetBookmarksByUserEmail(userEmail string) ([]repos.Bookmark, error) {
+	return s.bookmarkRepo.GetByUserEmail(userEmail)
+}
+
 func (s *BookmarkService) IncrementClickCount(id int) error {
 	return s.bookmarkRepo.IncrementClickCount(id)
 }

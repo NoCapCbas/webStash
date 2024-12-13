@@ -2,6 +2,7 @@ package repos
 
 import (
 	"database/sql"
+	"log"
 	"time"
 )
 
@@ -26,12 +27,15 @@ func NewBookmarkRepo(db *sql.DB) *BookmarkRepo {
 }
 
 func (r *BookmarkRepo) Create(bookmark *Bookmark) error {
-	return r.db.QueryRow(`
+	log.Println("Creating bookmark: ", bookmark)
+	_, err := r.db.Exec(`
 		INSERT INTO bookmarks (user_id, url, title, description, public)
 		VALUES ($1, $2, $3, $4, $5)
-		RETURNING id, created_at, updated_at, click_count
-	`, bookmark.UserID, bookmark.URL, bookmark.Title, bookmark.Description, bookmark.Public).
-		Scan(&bookmark.ID, &bookmark.CreatedAt, &bookmark.UpdatedAt, &bookmark.ClickCount)
+	`, bookmark.UserID, bookmark.URL, bookmark.Title, bookmark.Description, bookmark.Public)
+	if err != nil {
+		log.Printf("Error creating bookmark(%d, %s, %s, %s, %t): %v", bookmark.UserID, bookmark.URL, bookmark.Title, bookmark.Description, bookmark.Public, err)
+	}
+	return err
 }
 
 func (r *BookmarkRepo) GetByID(id int) (*Bookmark, error) {
@@ -68,6 +72,17 @@ func (r *BookmarkRepo) GetByUserID(userID int) ([]Bookmark, error) {
 		bookmarks = append(bookmarks, b)
 	}
 	return bookmarks, nil
+}
+
+func (r *BookmarkRepo) GetByUserEmail(userEmail string) ([]Bookmark, error) {
+	var userID int
+	err := r.db.QueryRow(`
+		SELECT id FROM users WHERE email = $1
+	`, userEmail).Scan(&userID)
+	if err != nil {
+		return nil, err
+	}
+	return r.GetByUserID(userID)
 }
 
 func (r *BookmarkRepo) Update(bookmark *Bookmark) error {

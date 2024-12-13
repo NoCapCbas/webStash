@@ -7,7 +7,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"time"
 
 	"github.com/NoCapCbas/webStash/internal/common"
 	"github.com/NoCapCbas/webStash/internal/db"
@@ -160,20 +159,6 @@ func verifyHandler(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/view/bookmarks", http.StatusSeeOther)
 }
 
-type Bookmark struct {
-	ID          string
-	Title       string
-	URL         string
-	Description string
-	Tags        []string
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
-	Public      bool
-	ClickCount  int
-}
-
-var bookmarks []Bookmark
-
 func bookmarkViewHandler(w http.ResponseWriter, r *http.Request) {
 	log.Println("Bookmark view handler")
 
@@ -191,34 +176,18 @@ func bookmarkViewHandler(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/404", http.StatusSeeOther)
 		return
 	}
-	bookmarks = append(bookmarks, Bookmark{
-		ID:          "1",
-		Title:       "Google",
-		URL:         "https://google.com",
-		Description: "Google's homepage",
-		Tags:        []string{"search", "internet"},
-		CreatedAt:   time.Now(),
-		UpdatedAt:   time.Now(),
-		Public:      false,
-		ClickCount:  0,
-	})
 
-	bookmarks = append(bookmarks, Bookmark{
-		ID:          "2",
-		Title:       "Github",
-		URL:         "https://github.com",
-		Description: "Github's homepage",
-		Tags:        []string{"code", "git"},
-		CreatedAt:   time.Now(),
-		UpdatedAt:   time.Now(),
-		Public:      false,
-		ClickCount:  0,
-	})
-
+	bookmarks, err := bookmarkService.GetBookmarksByUserEmail(email)
+	if err != nil {
+		log.Println("Error getting bookmarks: ", err)
+		http.Redirect(w, r, "/404", http.StatusSeeOther)
+		return
+	}
+	fmt.Println(bookmarks)
 	// Render the account template with the email
 	data := struct {
 		Email     string
-		Bookmarks []Bookmark
+		Bookmarks []repos.Bookmark
 	}{
 		Email:     email,
 		Bookmarks: bookmarks,
@@ -266,6 +235,7 @@ func bookmarkCreateHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid request", http.StatusBadRequest)
 		return
 	}
+
 	bookmarkService.CreateBookmark(&bookmark)
 }
 
