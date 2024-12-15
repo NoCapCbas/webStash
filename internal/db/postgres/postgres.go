@@ -1,10 +1,10 @@
-package db
+package postgres
 
 import (
 	"database/sql"
 	"log"
 
-	"github.com/NoCapCbas/webStash/internal/db/seed"
+	"github.com/NoCapCbas/webStash/internal/db/postgres/seed"
 	_ "github.com/lib/pq"
 )
 

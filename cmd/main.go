@@ -9,6 +9,7 @@ import (
 	"os"
 
 	"github.com/NoCapCbas/webStash/internal/common"
+	"github.com/NoCapCbas/webStash/internal/db/models"
 	"github.com/NoCapCbas/webStash/internal/db/postgres/repos"
 	"github.com/NoCapCbas/webStash/internal/db/sqlite"
 	"github.com/NoCapCbas/webStash/internal/services"
@@ -187,7 +188,7 @@ func bookmarkViewHandler(w http.ResponseWriter, r *http.Request) {
 	// Render the account template with the email
 	data := struct {
 		Email     string
-		Bookmarks []repos.Bookmark
+		Bookmarks []models.Bookmark
 	}{
 		Email:     email,
 		Bookmarks: bookmarks,
@@ -287,10 +288,10 @@ func main() {
 	}
 
 	// Initialize repositories
-	bookmarkRepo := sqlite.NewBookmarkRepo(sqlite.DB)
-	userRepo := sqlite.repos.NewUserRepo(sqlite.DB)
-	sessionRepo := sqlite.NewSessionRepo(sqlite.DB)
-	magicLinkRepo := sqlite.NewMagicLinkRepo(sqlite.DB)
+	bookmarkRepo := repos.NewBookmarkRepo(sqlite.DB)
+	userRepo := repos.NewUserRepo(sqlite.DB)
+	sessionRepo := repos.NewSessionRepo(sqlite.DB)
+	magicLinkRepo := repos.NewMagicLinkRepo(sqlite.DB)
 
 	// Initialize services
 	authService = services.NewAuthService(magicLinkRepo, sessionRepo, userRepo)

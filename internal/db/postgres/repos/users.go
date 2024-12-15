@@ -2,15 +2,9 @@ package repos
 
 import (
 	"database/sql"
-	"time"
-)
 
-type User struct {
-	ID             int
-	Email          string
-	MembershipType int
-	CreatedAt      time.Time
-}
+	"github.com/NoCapCbas/webStash/internal/db/models"
+)
 
 type UserRepo struct {
 	db *sql.DB
@@ -21,8 +15,8 @@ func NewUserRepo(db *sql.DB) *UserRepo {
 }
 
 // Create inserts a new user and returns the created user with ID
-func (r *UserRepo) Create(email string, membershipType int) (*User, error) {
-	var user User
+func (r *UserRepo) Create(email string, membershipType int) (*models.User, error) {
+	var user models.User
 
 	// First try to get existing user
 	err := r.db.QueryRow(`
@@ -50,8 +44,8 @@ func (r *UserRepo) Create(email string, membershipType int) (*User, error) {
 }
 
 // GetByID retrieves a user by their ID
-func (r *UserRepo) GetByID(id int) (*User, error) {
-	var user User
+func (r *UserRepo) GetByID(id int) (*models.User, error) {
+	var user models.User
 	err := r.db.QueryRow(`
 		SELECT id, email, membership_type, created_at
 		FROM users
@@ -65,8 +59,8 @@ func (r *UserRepo) GetByID(id int) (*User, error) {
 }
 
 // GetByEmail retrieves a user by their email
-func (r *UserRepo) GetByEmail(email string) (*User, error) {
-	var user User
+func (r *UserRepo) GetByEmail(email string) (*models.User, error) {
+	var user models.User
 	err := r.db.QueryRow(`
 		SELECT id, email, membership_type, created_at
 		FROM users
@@ -80,7 +74,7 @@ func (r *UserRepo) GetByEmail(email string) (*User, error) {
 }
 
 // Update modifies an existing user's information
-func (r *UserRepo) Update(user *User) error {
+func (r *UserRepo) Update(user *models.User) error {
 	_, err := r.db.Exec(`
 		UPDATE users
 		SET email = $1, membership_type = $2

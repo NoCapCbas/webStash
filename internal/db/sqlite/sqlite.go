@@ -33,16 +33,16 @@ func (db *DB) Close() error {
 
 // InitSchema initializes the database schema
 func (db *DB) InitSchema() error {
-	if err := seed.CreateUsersTable(db); err != nil {
+	if err := seed.CreateUsersTable(db.DB); err != nil {
 		return err
 	}
-	if err := seed.CreateSessionsTable(db); err != nil {
+	if err := seed.CreateSessionsTable(db.DB); err != nil {
 		return err
 	}
-	if err := seed.CreateBookmarksTable(db); err != nil {
+	if err := seed.CreateBookmarksTable(db.DB); err != nil {
 		return err
 	}
-	if err := seed.CreateMagicLinksTable(db); err != nil {
+	if err := seed.CreateMagicLinksTable(db.DB); err != nil {
 		return err
 	}
 	return nil
@@ -50,7 +50,7 @@ func (db *DB) InitSchema() error {
 
 // Transaction executes a function within a database transaction
 func (db *DB) Transaction(fn func(*sql.Tx) error) error {
-	tx, err := db.Begin()
+	tx, err := db.DB.Begin()
 	if err != nil {
 		return err
 	}
