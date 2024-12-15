@@ -1,7 +1,20 @@
-version: '3.7'
+version: '3.8'
 
-services: 
-  tabstash:
+services:
+  sqlitebrowser:
+    image: lscr.io/linuxserver/sqlitebrowser:latest
+    container_name: sqlitebrowser
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+    volumes:
+      - ./data:/config  # Mount your SQLite database directory
+    ports:
+      - "3000:3000"  # Web UI
+    restart: unless-stopped
+
+  webstash:
     build:
       context: .
       dockerfile: dockerfile.dev
@@ -13,3 +26,5 @@ services:
       - .env
     environment:
       - ENV=development
+
+  

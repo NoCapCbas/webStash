@@ -9,8 +9,8 @@ import (
 	"os"
 
 	"github.com/NoCapCbas/webStash/internal/common"
-	"github.com/NoCapCbas/webStash/internal/db"
-	"github.com/NoCapCbas/webStash/internal/db/repos"
+	"github.com/NoCapCbas/webStash/internal/db/postgres/repos"
+	"github.com/NoCapCbas/webStash/internal/db/sqlite"
 	"github.com/NoCapCbas/webStash/internal/services"
 )
 
@@ -281,16 +281,16 @@ func bookmarkReadHandler(w http.ResponseWriter, r *http.Request) {
 func main() {
 	// Initialize database
 	var err error
-	postgres, err := db.NewPostgresDB(os.Getenv("DATABASE_URL"))
+	sqlite, err := sqlite.New(os.Getenv("DATABASE_URL"))
 	if err != nil {
 		log.Fatal("Failed to connect to database:", err)
 	}
 
 	// Initialize repositories
-	bookmarkRepo := repos.NewBookmarkRepo(postgres.DB)
-	userRepo := repos.NewUserRepo(postgres.DB)
-	sessionRepo := repos.NewSessionRepo(postgres.DB)
-	magicLinkRepo := repos.NewMagicLinkRepo(postgres.DB)
+	bookmarkRepo := sqlite.NewBookmarkRepo(sqlite.DB)
+	userRepo := sqlite.repos.NewUserRepo(sqlite.DB)
+	sessionRepo := sqlite.NewSessionRepo(sqlite.DB)
+	magicLinkRepo := sqlite.NewMagicLinkRepo(sqlite.DB)
 
 	// Initialize services
 	authService = services.NewAuthService(magicLinkRepo, sessionRepo, userRepo)
