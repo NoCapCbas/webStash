@@ -1,4 +1,5 @@
 TODO:
+- turning tags into a list of tags, starting with input form -> request body -> bookmark obj -> bookmark table
 - flesh out the actual account bookmark page
 - add bookmark
 - update bookmark
