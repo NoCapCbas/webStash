@@ -9,7 +9,7 @@ type MagicLink struct {
 	ID        int
 	Email     string
 	Token     string
-	Used      bool
+	UsedAt    sql.NullTime
 	ExpiresAt time.Time
 	CreatedAt time.Time
 }
@@ -27,8 +27,8 @@ func (r *MagicLinkRepo) Create(email string, token string, expiresAt time.Time) 
 	err := r.db.QueryRow(`
 		INSERT INTO magic_links (email, token, expires_at)
 		VALUES ($1, $2, $3)
-		RETURNING id, email, token, used, expires_at, created_at
-	`, email, token, expiresAt).Scan(&ml.ID, &ml.Email, &ml.Token, &ml.Used, &ml.ExpiresAt, &ml.CreatedAt)
+		RETURNING id, email, token, used_at, expires_at, created_at
+	`, email, token, expiresAt).Scan(&ml.ID, &ml.Email, &ml.Token, &ml.UsedAt, &ml.ExpiresAt, &ml.CreatedAt)
 	if err != nil {
 		return nil, err
 	}
@@ -38,10 +38,10 @@ func (r *MagicLinkRepo) Create(email string, token string, expiresAt time.Time) 
 func (r *MagicLinkRepo) GetByToken(token string) (*MagicLink, error) {
 	var ml MagicLink
 	err := r.db.QueryRow(`
-		SELECT id, email, token, used, expires_at, created_at
+		SELECT id, email, token, used_at, expires_at, created_at
 		FROM magic_links
 		WHERE token = $1
-	`, token).Scan(&ml.ID, &ml.Email, &ml.Token, &ml.Used, &ml.ExpiresAt, &ml.CreatedAt)
+	`, token).Scan(&ml.ID, &ml.Email, &ml.Token, &ml.UsedAt, &ml.ExpiresAt, &ml.CreatedAt)
 	if err != nil {
 		return nil, err
 	}
@@ -51,10 +51,13 @@ func (r *MagicLinkRepo) GetByToken(token string) (*MagicLink, error) {
 func (r *MagicLinkRepo) MarkAsUsed(id int) error {
 	_, err := r.db.Exec(`
 		UPDATE magic_links
-		SET used = true
+		SET used_at = CURRENT_TIMESTAMP
 		WHERE id = $1
 	`, id)
-	return err
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (r *MagicLinkRepo) DeleteExpired() error {

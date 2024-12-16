@@ -54,6 +54,12 @@ func (s *AuthService) ValidateMagicLink(token string) (string, error) {
 		return "", errors.New("token expired, please request a new one")
 	}
 
+	// update magic link used status
+	err = s.magicLinkRepo.MarkAsUsed(ml.ID)
+	if err != nil {
+		return "", err
+	}
+
 	s.magicLinkRepo.DeleteExpired()
 
 	return ml.Email, nil
@@ -122,4 +128,16 @@ func (s *AuthService) CreateUser(email string) error {
 	// create user if not exists
 	_, err := s.userRepo.Create(email, 0)
 	return err
+}
+
+func (s *AuthService) GetUserIDByEmail(email string) int {
+	user, err := s.userRepo.GetByEmail(email)
+	if err != nil {
+		return 0
+	}
+	return user.ID
+}
+
+func (s *AuthService) DeleteSession(token string) error {
+	return s.sessionRepo.DeleteByToken(token)
 }

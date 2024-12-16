@@ -1,8 +1,12 @@
 package seed
 
-import "database/sql"
+import (
+	"database/sql"
+	"log"
+)
 
 func CreateSessionsTable(db *sql.DB) error {
+	log.Println("Creating sessions table")
 	_, err := db.Exec(`
         CREATE TABLE IF NOT EXISTS sessions (
             id SERIAL PRIMARY KEY,
@@ -15,5 +19,10 @@ func CreateSessionsTable(db *sql.DB) error {
         CREATE INDEX IF NOT EXISTS sessions_token_idx ON sessions(token);
         CREATE INDEX IF NOT EXISTS sessions_user_id_idx ON sessions(user_id);
     `)
-	return err
+	if err != nil {
+		log.Println("Error creating sessions table:", err)
+		return err
+	}
+	log.Println("Sessions table created")
+	return nil
 }

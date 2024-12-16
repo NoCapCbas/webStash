@@ -11,6 +11,7 @@ import (
 	"github.com/NoCapCbas/webStash/internal/common"
 	"github.com/NoCapCbas/webStash/internal/db"
 	"github.com/NoCapCbas/webStash/internal/db/repos"
+	"github.com/NoCapCbas/webStash/internal/db/seed"
 	"github.com/NoCapCbas/webStash/internal/services"
 )
 
@@ -230,11 +231,34 @@ func notFoundHandler(w http.ResponseWriter, r *http.Request) {
 
 func bookmarkCreateHandler(w http.ResponseWriter, r *http.Request) {
 	log.Println("Bookmark create handler")
+
+	// validate session token
+	sessionTokenCookie, err := r.Cookie("session_token")
+	if err != nil {
+		log.Println("No session token cookie found: ", err)
+		http.Redirect(w, r, "/404", http.StatusSeeOther)
+		return
+	}
+	email, err := authService.ValidateSession(sessionTokenCookie.Value)
+	if err != nil {
+		log.Println("Invalid session token: ", err)
+		http.Redirect(w, r, "/404", http.StatusSeeOther)
+		return
+	}
+
 	var bookmark repos.Bookmark
 	if err := json.NewDecoder(r.Body).Decode(&bookmark); err != nil {
 		http.Error(w, "Invalid request", http.StatusBadRequest)
 		return
 	}
+	// get user id from email
+	userID := authService.GetUserIDByEmail(email)
+	if userID == 0 {
+		http.Error(w, "User not found", http.StatusNotFound)
+		return
+	}
+
+	bookmark.UserID = userID
 
 	bookmarkService.CreateBookmark(&bookmark)
 }
@@ -278,12 +302,42 @@ func bookmarkReadHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(bookmark)
 }
 
+func signoutHandler(w http.ResponseWriter, r *http.Request) {
+	log.Println("Signing out")
+	// delete session token cookie
+	sessionTokenCookie, err := r.Cookie("session_token")
+	if err != nil {
+		log.Println("No session token cookie found: ", err)
+		http.Redirect(w, r, "/404", http.StatusSeeOther)
+		return
+	}
+	authService.DeleteSession(sessionTokenCookie.Value)
+
+	http.SetCookie(w, &http.Cookie{
+		Name:     "session_token",
+		Value:    "",
+		Path:     "/",
+		HttpOnly: true,
+		MaxAge:   -1,
+	})
+	http.Redirect(w, r, "/", http.StatusSeeOther)
+}
+
 func main() {
 	// Initialize database
 	var err error
 	postgres, err := db.NewPostgresDB(os.Getenv("DATABASE_URL"))
 	if err != nil {
 		log.Fatal("Failed to connect to database:", err)
+	}
+
+	// Seed database, if in development mode
+	if os.Getenv("ENV") == "development" {
+		log.Println("Seeding database")
+		seed.CreateUsersTable(postgres.DB)
+		seed.CreateBookmarksTable(postgres.DB)
+		seed.CreateSessionsTable(postgres.DB)
+		seed.CreateMagicLinksTable(postgres.DB)
 	}
 
 	// Initialize repositories
@@ -308,6 +362,7 @@ func main() {
 	http.HandleFunc("/view/bookmarks", bookmarkViewHandler)
 	http.HandleFunc("/policies", policiesHandler)
 	http.HandleFunc("/404", notFoundHandler)
+	http.HandleFunc("/signout", signoutHandler)
 
 	// bookmark handlers
 	http.HandleFunc("/api/v1/bookmarks/create", bookmarkCreateHandler)

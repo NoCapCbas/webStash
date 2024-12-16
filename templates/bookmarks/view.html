@@ -13,11 +13,10 @@
             const search = this.searchQuery.toLowerCase();
             if (search === '') return true;
             
-            // Split tags string into array and remove brackets
-            
             return bookmark.title.toLowerCase().includes(search) ||
                    bookmark.description.toLowerCase().includes(search) ||
                    bookmark.tags.some(tag => tag.toLowerCase().includes(search));
+
         },
         async addBookmark() {
             try {
@@ -75,16 +74,15 @@
 
     </div>
 
-
     <ul role="list" class="divide-y divide-gray-100">
     {{range .Bookmarks}}
     <div 
         x-data="{ 
             open: false,
             bookmark: {
-                title: {{.Title | jsEscape}},
-                description: {{.Description | jsEscape}},
-                tags: {{.Tags | jsEscape}},
+                title: '{{.Title}}',
+                description: '{{.Description}}',
+                tags: '{{.Tags}}',
             }
         }"
         x-show="filterBookmarks(bookmark)"

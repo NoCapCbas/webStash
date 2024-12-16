@@ -1,8 +1,12 @@
 package seed
 
-import "database/sql"
+import (
+	"database/sql"
+	"log"
+)
 
 func CreateUsersTable(db *sql.DB) error {
+	log.Println("Creating users table")
 	_, err := db.Exec(`
         CREATE TABLE IF NOT EXISTS users (
             id SERIAL PRIMARY KEY,
@@ -13,5 +17,10 @@ func CreateUsersTable(db *sql.DB) error {
         
         CREATE INDEX IF NOT EXISTS users_email_idx ON users(email);
     `)
-	return err
+	if err != nil {
+		log.Println("Error creating users table:", err)
+		return err
+	}
+	log.Println("Users table created")
+	return nil
 }

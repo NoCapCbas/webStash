@@ -14,6 +14,7 @@ type Bookmark struct {
 	Description string
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
+	Tags        string
 	Public      bool
 	ClickCount  int
 }
@@ -29,9 +30,9 @@ func NewBookmarkRepo(db *sql.DB) *BookmarkRepo {
 func (r *BookmarkRepo) Create(bookmark *Bookmark) error {
 	log.Println("Creating bookmark: ", bookmark)
 	_, err := r.db.Exec(`
-		INSERT INTO bookmarks (user_id, url, title, description, public)
-		VALUES ($1, $2, $3, $4, $5)
-	`, bookmark.UserID, bookmark.URL, bookmark.Title, bookmark.Description, bookmark.Public)
+		INSERT INTO bookmarks (user_id, url, title, description, public, tags)
+		VALUES ($1, $2, $3, $4, $5, $6)
+	`, bookmark.UserID, bookmark.URL, bookmark.Title, bookmark.Description, bookmark.Public, bookmark.Tags)
 	if err != nil {
 		log.Printf("Error creating bookmark(%d, %s, %s, %s, %t): %v", bookmark.UserID, bookmark.URL, bookmark.Title, bookmark.Description, bookmark.Public, err)
 	}
@@ -41,10 +42,10 @@ func (r *BookmarkRepo) Create(bookmark *Bookmark) error {
 func (r *BookmarkRepo) GetByID(id int) (*Bookmark, error) {
 	var b Bookmark
 	err := r.db.QueryRow(`
-		SELECT id, user_id, url, title, description, created_at, updated_at, public, click_count
+		SELECT id, user_id, url, title, description, created_at, updated_at, public, click_count, tags
 		FROM bookmarks
 		WHERE id = $1
-	`, id).Scan(&b.ID, &b.UserID, &b.URL, &b.Title, &b.Description, &b.CreatedAt, &b.UpdatedAt, &b.Public, &b.ClickCount)
+	`, id).Scan(&b.ID, &b.UserID, &b.URL, &b.Title, &b.Description, &b.CreatedAt, &b.UpdatedAt, &b.Public, &b.ClickCount, &b.Tags)
 	if err != nil {
 		return nil, err
 	}
@@ -53,7 +54,7 @@ func (r *BookmarkRepo) GetByID(id int) (*Bookmark, error) {
 
 func (r *BookmarkRepo) GetByUserID(userID int) ([]Bookmark, error) {
 	rows, err := r.db.Query(`
-		SELECT id, user_id, url, title, description, created_at, updated_at, public, click_count
+		SELECT id, user_id, url, title, description, created_at, updated_at, public, click_count, tags
 		FROM bookmarks
 		WHERE user_id = $1
 		ORDER BY created_at DESC
@@ -66,7 +67,7 @@ func (r *BookmarkRepo) GetByUserID(userID int) ([]Bookmark, error) {
 	var bookmarks []Bookmark
 	for rows.Next() {
 		var b Bookmark
-		if err := rows.Scan(&b.ID, &b.UserID, &b.URL, &b.Title, &b.Description, &b.CreatedAt, &b.UpdatedAt, &b.Public, &b.ClickCount); err != nil {
+		if err := rows.Scan(&b.ID, &b.UserID, &b.URL, &b.Title, &b.Description, &b.CreatedAt, &b.UpdatedAt, &b.Public, &b.ClickCount, &b.Tags); err != nil {
 			return nil, err
 		}
 		bookmarks = append(bookmarks, b)
@@ -88,9 +89,9 @@ func (r *BookmarkRepo) GetByUserEmail(userEmail string) ([]Bookmark, error) {
 func (r *BookmarkRepo) Update(bookmark *Bookmark) error {
 	_, err := r.db.Exec(`
 		UPDATE bookmarks
-		SET url = $1, title = $2, description = $3, public = $4, updated_at = CURRENT_TIMESTAMP
-		WHERE id = $5 AND user_id = $6
-	`, bookmark.URL, bookmark.Title, bookmark.Description, bookmark.Public, bookmark.ID, bookmark.UserID)
+		SET url = $1, title = $2, description = $3, public = $4, tags = $5, updated_at = CURRENT_TIMESTAMP
+		WHERE id = $6 AND user_id = $7
+	`, bookmark.URL, bookmark.Title, bookmark.Description, bookmark.Public, bookmark.Tags, bookmark.ID, bookmark.UserID)
 	return err
 }
 
