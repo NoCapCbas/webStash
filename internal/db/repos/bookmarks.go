@@ -14,24 +14,25 @@ type Bookmark struct {
 	Description string    `json:"description"`
 	CreatedAt   time.Time `json:"created_at"`
 	UpdatedAt   time.Time `json:"updated_at"`
-	Tags        string    `json:"tags"`
+	Tags        []Tag     `json:"tags"`
 	Public      bool      `json:"public"`
 	ClickCount  int       `json:"click_count"`
 }
 
 type BookmarkRepo struct {
-	db *sql.DB
+	db      *sql.DB
+	tagRepo *TagRepo
 }
 
 func NewBookmarkRepo(db *sql.DB) *BookmarkRepo {
-	return &BookmarkRepo{db: db}
+	return &BookmarkRepo{db: db, tagRepo: NewTagRepo(db)}
 }
 
 func (r *BookmarkRepo) Create(bookmark *Bookmark) error {
 	log.Println("Creating bookmark: ", bookmark)
 	_, err := r.db.Exec(`
-		INSERT INTO bookmarks (user_id, url, title, description, public, tags)
-		VALUES ($1, $2, $3, $4, $5, $6)
+		INSERT INTO bookmarks (user_id, url, title, description, public)
+		VALUES ($1, $2, $3, $4, $5)
 	`, bookmark.UserID, bookmark.URL, bookmark.Title, bookmark.Description, bookmark.Public, bookmark.Tags)
 	if err != nil {
 		log.Printf("Error creating bookmark(%d, %s, %s, %s, %t): %v", bookmark.UserID, bookmark.URL, bookmark.Title, bookmark.Description, bookmark.Public, err)
@@ -112,5 +113,15 @@ func (r *BookmarkRepo) Delete(id, userID int) error {
 		DELETE FROM bookmarks
 		WHERE id = $1 AND user_id = $2
 	`, id, userID)
+	if err != nil {
+		log.Printf("Error deleting bookmark(%d, %d): %v", id, userID, err)
+	}
+
+	// delete tags
+	err = r.tagRepo.DeleteAllByBookmarkID(id)
+	if err != nil {
+		log.Printf("Error deleting tags for bookmark(%d): %v", id, err)
+	}
+
 	return err
 }

@@ -128,8 +128,8 @@
             open: false,
             bookmark: {
                 title: '{{.Title}}',
-                description: '{{.Description}}',
-                tags: '{{.Tags}}',
+                description: `{{.Description}}`,
+                tags: `{{.Tags}}`,
             }
         }"
         x-show="filterBookmarks(bookmark)"
@@ -168,11 +168,11 @@
                 data-tags="{{.Tags}}"
                 @click="updateBookmarkModal = !updateBookmarkModal;
                     existingBookmark = {
-                        id: parseInt($el.dataset.id),
-                        title: $el.dataset.title,
-                        url: $el.dataset.url,
-                        description: $el.dataset.description,
-                        tags: $el.dataset.tags,
+                        id: parseInt({{.ID}}),
+                        title: `{{.Title}}`,
+                        url: `{{.URL}}`,
+                        description: `{{.Description}}`,
+                        tags: `{{.Tags}}`,
                     }"
                 class="text-green-500 hover:text-green-700">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
