@@ -7,16 +7,16 @@ import (
 )
 
 type Bookmark struct {
-	ID          int
-	UserID      int
-	URL         string
-	Title       string
-	Description string
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
-	Tags        string
-	Public      bool
-	ClickCount  int
+	ID          int       `json:"id"`
+	UserID      int       `json:"user_id"`
+	URL         string    `json:"url"`
+	Title       string    `json:"title"`
+	Description string    `json:"description"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
+	Tags        string    `json:"tags"`
+	Public      bool      `json:"public"`
+	ClickCount  int       `json:"click_count"`
 }
 
 type BookmarkRepo struct {
@@ -90,8 +90,11 @@ func (r *BookmarkRepo) Update(bookmark *Bookmark) error {
 	_, err := r.db.Exec(`
 		UPDATE bookmarks
 		SET url = $1, title = $2, description = $3, public = $4, tags = $5, updated_at = CURRENT_TIMESTAMP
-		WHERE id = $6 AND user_id = $7
-	`, bookmark.URL, bookmark.Title, bookmark.Description, bookmark.Public, bookmark.Tags, bookmark.ID, bookmark.UserID)
+		WHERE id = $6
+	`, bookmark.URL, bookmark.Title, bookmark.Description, bookmark.Public, bookmark.Tags, bookmark.ID)
+	if err != nil {
+		log.Printf("Error updating bookmark(%d, %s, %s, %s, %t): %v", bookmark.ID, bookmark.URL, bookmark.Title, bookmark.Description, bookmark.Public, err)
+	}
 	return err
 }
 

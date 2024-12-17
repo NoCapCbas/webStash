@@ -13,11 +13,11 @@
         },
         updateBookmarkModal: false,
         existingBookmark: {
-            id: ``,
-            title: ``,
-            url: ``,
-            description: ``,
-            tags: ``
+            id: 0,
+            title: '',
+            url: '',
+            description: '',
+            tags: ''
         },
 
         filterBookmarks(bookmark) {
@@ -168,7 +168,7 @@
                 data-tags="{{.Tags}}"
                 @click="updateBookmarkModal = !updateBookmarkModal;
                     existingBookmark = {
-                        id: $el.dataset.id,
+                        id: parseInt($el.dataset.id),
                         title: $el.dataset.title,
                         url: $el.dataset.url,
                         description: $el.dataset.description,

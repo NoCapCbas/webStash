@@ -1,5 +1,4 @@
 TODO:
-- fix edit bookmark flow
 - fix "Unexpected EOF" error, from new line code in bookmark description
 - turning tags into a list of tags, starting with input form -> request body -> bookmark obj -> bookmark table
 - flesh out the actual account bookmark page

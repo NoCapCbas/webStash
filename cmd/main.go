@@ -280,25 +280,26 @@ func bookmarkUpdateHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if r.Method == http.MethodDelete {
+		log.Println("moving to Bookmark delete handler")
 		bookmarkDeleteHandler(w, r)
 		return
 	}
 
-	// get id from url
+	log.Println("getting id from url")
 	id := r.URL.Path[len("/api/v1/bookmarks/"):]
 	if id == "" {
 		http.Error(w, "Missing id", http.StatusBadRequest)
 		return
 	}
 
-	// convert id to int
+	log.Println("converting id to int")
 	idInt, err := strconv.Atoi(id)
 	if err != nil {
 		http.Error(w, "Invalid id", http.StatusBadRequest)
 		return
 	}
 
-	// get user id from email
+	log.Println("getting session token cookie")
 	sessionTokenCookie, err := r.Cookie("session_token")
 	if err != nil {
 		log.Println("No session token cookie found: ", err)
@@ -312,13 +313,18 @@ func bookmarkUpdateHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	log.Println("decoding bookmark")
 	var bookmark repos.Bookmark
 	if err := json.NewDecoder(r.Body).Decode(&bookmark); err != nil {
+		log.Println("Error decoding bookmark: ", err)
 		http.Error(w, "Invalid request", http.StatusBadRequest)
 		return
 	}
 
+	log.Println("setting bookmark id")
 	bookmark.ID = idInt
+
+	log.Println("updating bookmark")
 	bookmarkService.UpdateBookmark(&bookmark)
 }
 
