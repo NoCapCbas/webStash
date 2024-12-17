@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 
 	"github.com/NoCapCbas/webStash/internal/common"
 	"github.com/NoCapCbas/webStash/internal/db"
@@ -31,6 +32,7 @@ var (
 			"templates/bookmarks/navbar.html",
 			"templates/bookmarks/view.html",
 			"templates/bookmarks/add-bookmark.html",
+			"templates/bookmarks/update-bookmark.html",
 		),
 	)
 	authService     *services.AuthService
@@ -232,6 +234,12 @@ func notFoundHandler(w http.ResponseWriter, r *http.Request) {
 func bookmarkCreateHandler(w http.ResponseWriter, r *http.Request) {
 	log.Println("Bookmark create handler")
 
+	// must be a post request
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
 	// validate session token
 	sessionTokenCookie, err := r.Cookie("session_token")
 	if err != nil {
@@ -265,22 +273,95 @@ func bookmarkCreateHandler(w http.ResponseWriter, r *http.Request) {
 
 func bookmarkUpdateHandler(w http.ResponseWriter, r *http.Request) {
 	log.Println("Bookmark update handler")
+	// must be a put request
+	if r.Method != http.MethodPut && r.Method != http.MethodDelete {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	if r.Method == http.MethodDelete {
+		bookmarkDeleteHandler(w, r)
+		return
+	}
+
+	// get id from url
+	id := r.URL.Path[len("/api/v1/bookmarks/"):]
+	if id == "" {
+		http.Error(w, "Missing id", http.StatusBadRequest)
+		return
+	}
+
+	// convert id to int
+	idInt, err := strconv.Atoi(id)
+	if err != nil {
+		http.Error(w, "Invalid id", http.StatusBadRequest)
+		return
+	}
+
+	// get user id from email
+	sessionTokenCookie, err := r.Cookie("session_token")
+	if err != nil {
+		log.Println("No session token cookie found: ", err)
+		http.Redirect(w, r, "/404", http.StatusSeeOther)
+		return
+	}
+	_, err = authService.ValidateSession(sessionTokenCookie.Value)
+	if err != nil {
+		log.Println("Invalid session token: ", err)
+		http.Redirect(w, r, "/404", http.StatusSeeOther)
+		return
+	}
+
 	var bookmark repos.Bookmark
 	if err := json.NewDecoder(r.Body).Decode(&bookmark); err != nil {
 		http.Error(w, "Invalid request", http.StatusBadRequest)
 		return
 	}
+
+	bookmark.ID = idInt
 	bookmarkService.UpdateBookmark(&bookmark)
 }
 
 func bookmarkDeleteHandler(w http.ResponseWriter, r *http.Request) {
 	log.Println("Bookmark delete handler")
-	var bookmark repos.Bookmark
-	if err := json.NewDecoder(r.Body).Decode(&bookmark); err != nil {
-		http.Error(w, "Invalid request", http.StatusBadRequest)
+	// must be a delete request
+	if r.Method != http.MethodDelete {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
-	bookmarkService.DeleteBookmark(bookmark.ID, bookmark.UserID)
+
+	// get id from url
+	id := r.URL.Path[len("/api/v1/bookmarks/"):]
+	if id == "" {
+		http.Error(w, "Missing id", http.StatusBadRequest)
+		return
+	}
+	// convert id to int
+	idInt, err := strconv.Atoi(id)
+	if err != nil {
+		http.Error(w, "Invalid id", http.StatusBadRequest)
+		return
+	}
+
+	sessionTokenCookie, err := r.Cookie("session_token")
+	if err != nil {
+		log.Println("No session token cookie found: ", err)
+		http.Redirect(w, r, "/404", http.StatusSeeOther)
+		return
+	}
+	email, err := authService.ValidateSession(sessionTokenCookie.Value)
+	if err != nil {
+		log.Println("Invalid session token: ", err)
+		http.Redirect(w, r, "/404", http.StatusSeeOther)
+		return
+	}
+
+	userID := authService.GetUserIDByEmail(email)
+	if userID == 0 {
+		http.Error(w, "User not found", http.StatusNotFound)
+		return
+	}
+	bookmarkService.DeleteBookmark(idInt, userID)
 }
 
 type readBookmarkRequest struct {
@@ -289,6 +370,12 @@ type readBookmarkRequest struct {
 
 func bookmarkReadHandler(w http.ResponseWriter, r *http.Request) {
 	log.Println("Bookmark read handler")
+	// must be a post request
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
 	var req readBookmarkRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "Invalid request", http.StatusBadRequest)
@@ -365,9 +452,11 @@ func main() {
 	http.HandleFunc("/signout", signoutHandler)
 
 	// bookmark handlers
-	http.HandleFunc("/api/v1/bookmarks/create", bookmarkCreateHandler)
-	http.HandleFunc("/api/v1/bookmarks/update", bookmarkUpdateHandler)
-	http.HandleFunc("/api/v1/bookmarks/delete", bookmarkDeleteHandler)
+	// create bookmark
+	http.HandleFunc("/api/v1/bookmarks", bookmarkCreateHandler)
+	// update, delete bookmark
+	http.HandleFunc("/api/v1/bookmarks/{id}", bookmarkUpdateHandler)
+	// read bookmark
 	http.HandleFunc("/api/v1/bookmarks/read", bookmarkReadHandler)
 
 	// start server
