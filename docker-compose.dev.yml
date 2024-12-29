@@ -1,30 +1,44 @@
 version: '3.8'
 
 services:
-  sqlitebrowser:
-    image: lscr.io/linuxserver/sqlitebrowser:latest
-    container_name: sqlitebrowser
-    environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=Etc/UTC
-    volumes:
-      - ./data:/config  # Mount your SQLite database directory
-    ports:
-      - "3000:3000"  # Web UI
-    restart: unless-stopped
+  # sqlitebrowser:
+  #   image: lscr.io/linuxserver/sqlitebrowser:latest
+  #   container_name: sqlitebrowser
+  #   environment:
+  #     - PUID=1000
+  #     - PGID=1000
+  #     - TZ=Etc/UTC
+  #   volumes:
+  #     - ./data:/config  # Mount your SQLite database directory
+  #   ports:
+  #     - "3000:3000"  # Web UI
+  #   restart: unless-stopped
 
-  webstash:
+  # webstash:
+  #   build:
+  #     context: .
+  #     dockerfile: dockerfile.dev
+  #   ports:
+  #     - "8080:8080"
+  #   volumes:
+  #     - .:/app
+  #   env_file:
+  #     - .env
+  #   environment:
+  #     - ENV=development
+
+  users:
     build:
       context: .
       dockerfile: dockerfile.dev
     ports:
-      - "8080:8080"
-    volumes:
+      - "0:8080"
+    volumes: 
       - .:/app
     env_file:
       - .env
     environment:
       - ENV=development
+      - SERVICE=users
 
   
