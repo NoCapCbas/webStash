@@ -5,7 +5,7 @@ import (
 	"github.com/NoCapCbas/webStash/internal/common"
 )
 
-UserService interface {
+type UserService interface {
 	SignUp(*User) (*User, error)
 	Update(user *User) error
 	Deactivate(id int) error
@@ -23,6 +23,7 @@ func NewUserService(repo UserPostgresRepository, pub common.Publisher) UserServi
 		pub:  pub,
 	}
 }
+
 
 func (s *UserServiceImpl) SignUp(user *User) (*User, error) {
 	_, err := s.repo.Create(user)

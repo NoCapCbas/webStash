@@ -5,7 +5,7 @@ import (
 	"database/sql"
 )
 
-UserPostgresRepository interface {
+type UserPostgresRepository interface {
 	Create(*User) (*User, error)
 	Update(user *User) error
 	GetByID(id int) (*User, error)
