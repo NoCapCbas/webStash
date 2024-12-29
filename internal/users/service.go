@@ -2,9 +2,7 @@
 package users
 
 import (
-	"github.com/NoCapCbas/webStash/internal/users/model"
-	"github.com/NoCapCbas/webStash/internal/users/repository"
-	"github.com/NoCapCbas/webStash/internal/common/publisher"
+	"github.com/NoCapCbas/webStash/internal/common"
 )
 
 UserService interface {
@@ -16,10 +14,10 @@ UserService interface {
 
 type UserServiceImpl struct {
 	repo UserPostgresRepository
-	pub  publisher.Publisher
+	pub common.Publisher
 }
 
-func NewUserService(repo repository.UserPostgresRepository, pub publisher.Publisher) UserService {
+func NewUserService(repo UserPostgresRepository, pub common.Publisher) UserService {
 	return &UserServiceImpl{
 		repo: repo,
 		pub:  pub,

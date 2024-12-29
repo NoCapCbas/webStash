@@ -2,7 +2,6 @@ package users
 
 import (
 	"net/http"
-	"github.com/NoCapCbas/webStash/internal/users/service"
 )
 
 type UserHandler struct {

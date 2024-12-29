@@ -3,7 +3,6 @@ package users
 
 import (
 	"database/sql"
-	"github.com/NoCapCbas/webStash/internal/users/model"
 )
 
 UserPostgresRepository interface {

@@ -1,7 +1,9 @@
+package users
+
 import (
 	"log"	
 	"net/http"
-	"github.com/NoCapCbas/webStash/cmd/users"
+	"github.com/NoCapCbas/webStash/internal/users"
 )
 
 func main() {
