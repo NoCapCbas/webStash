@@ -1,8 +1,8 @@
+dev:
+	docker compose --env-file .env -f docker-compose.dev.yml up --build
+
 dev-recreate:
 	docker compose --env-file .env -f docker-compose.dev.yml up --build -d --force-recreate
-
-dev:
-	docker compose --env-file .env -f docker-compose.dev.yml up --build -d
 
 dev-logs:
 	docker compose --env-file .env -f docker-compose.dev.yml logs

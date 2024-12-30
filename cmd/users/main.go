@@ -9,13 +9,13 @@ import (
 func main() {
 	
 	// Initialize the service
-	userService := service.NewUserService()
+	userService := NewUserService()
 
 	// Initialize the handler
-	userHandler := handlers.NewUserHandler(userService)
+	userHandler := NewUserHandler(userService)
 
 	// Set up general user routes /{service}/{event}
-	http.HandleFunc("/users/signup", userHandler.SignUpUserHandler)
+	http.HandleFunc("/users/signup", SignUpUserHandler)
 
 	// Set up user specific routes /{service}/{event}/{user_id}
 	http.HandleFunc("users/login/{id}", userHandler.LoginUserHandler)

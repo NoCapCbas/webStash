@@ -9,7 +9,7 @@ type Role int
 
 const (
 	Admin Role = iota // Starts at 0 and increments
-	User
+	Basic	
 )
 
 type User struct {

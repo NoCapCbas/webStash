@@ -3,13 +3,14 @@ package users
 
 import (
 	"github.com/NoCapCbas/webStash/internal/common"
+	"log"
+	"context"
 )
 
 type UserService interface {
 	SignUp(*User) (*User, error)
 	Update(user *User) error
-	Deactivate(id int) error
-	Reactivate(id int) error
+	Verify(user *User) error
 }
 
 type UserServiceImpl struct {
@@ -28,41 +29,41 @@ func NewUserService(repo UserPostgresRepository, pub common.Publisher) UserServi
 func (s *UserServiceImpl) SignUp(user *User) (*User, error) {
 	_, err := s.repo.Create(user)
 	if err != nil {
-		log.Error(err)
+		log.Println(err)
 		return nil, err
 	}
 	err = s.pub.Publish(context.Background(), "user.signedup", user)
 	if err != nil {
-		log.Error(err)
+		log.Println(err)
 		return nil, err
 	}
 	return user, nil
 }
 
 func (s *UserServiceImpl) Update(user *User) error {
-	_, err := s.repo.Update(user)
+	err := s.repo.Update(user)
 	if err != nil {
-		log.Error(err)
+		log.Println(err)
 		return err
 	}
 	err = s.pub.Publish(context.Background(), "user.updated", user)
 	if err != nil {
-		log.Error(err)
+		log.Println(err)
 		return err
 	}
 	return nil
 }
 
 func (s *UserServiceImpl) Verify(user *User) error {
-	_, err := s.repo.Verify(user)
+	err := s.repo.Verify(user)
 	if err != nil {
-		log.Error(err)
+		log.Println(err)
 		return err
 	}
 
 	err = s.pub.Publish(context.Background(), "user.verified", user)
 	if err != nil {
-		log.Error(err)
+		log.Println(err)
 		return err
 	}
 	return nil
