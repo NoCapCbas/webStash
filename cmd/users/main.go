@@ -13,7 +13,7 @@ import (
 	"github.com/NoCapCbas/webStash/internal/common"
 )
 
-// Configuration variables
+// Configuration variables, temporarily hard coded
 const (
 	postgresHost     = "postgres"
 	postgresPort     = 5432
