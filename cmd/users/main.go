@@ -1,4 +1,4 @@
-package users
+package main
 
 import (
 	"log"	
@@ -15,13 +15,13 @@ import (
 
 // Configuration variables
 const (
-	postgresHost     = "localhost"
+	postgresHost     = "postgres"
 	postgresPort     = 5432
 	postgresUser     = "postgres"
 	postgresPassword = "postgres"
 	postgresDB       = "postgres"
 
-	redisAddr = "localhost:6379"
+	redisAddr = "redis:6379"
 	redisPass = "" // Add Redis password if needed
 	redisDB   = 0  // Redis database index
 )
