@@ -15,10 +15,10 @@ type UserService interface {
 
 type UserServiceImpl struct {
 	repo UserPostgresRepository
-	pub common.Publisher
+	pub *common.Publisher
 }
 
-func NewUserService(repo UserPostgresRepository, pub common.Publisher) UserService {
+func NewUserService(repo UserPostgresRepository, pub *common.Publisher) UserService {
 	return &UserServiceImpl{
 		repo: repo,
 		pub:  pub,
