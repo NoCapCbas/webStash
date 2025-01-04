@@ -4,7 +4,7 @@ services:
   # sqlitebrowser:
   #   image: lscr.io/linuxserver/sqlitebrowser:latest
   #   container_name: sqlitebrowser
-  #   environment:
+  #a  environment:
   #     - PUID=1000
   #     - PGID=1000
   #     - TZ=Etc/UTC
@@ -41,15 +41,15 @@ services:
       - ENV=development
       - SERVICE=users
 
-  postgres:
-    image: postgres:16 # Use the desired PostgreSQL version
-    container_name: postgres-db
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: postgres
-    volumes:
-      - postgres_data:/var/lib/postgresql/data # Persistent storage for Postgres
+  # postgres:
+  #   image: postgres:16 # Use the desired PostgreSQL version
+  #   container_name: postgres-db
+  #   environment:
+  #     POSTGRES_USER: postgres
+  #     POSTGRES_PASSWORD: postgres
+  #     POSTGRES_DB: postgres
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data # Persistent storage for Postgres
 
   redis:
     image: redis:7 # Use the desired Redis version

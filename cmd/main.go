@@ -41,6 +41,7 @@ var (
 func indexHandler(w http.ResponseWriter, r *http.Request) {
 
 	// main portfolio handler
+	fmt.Println("index...")
 
 	// parse template file
 	tmpl, err := template.ParseFiles(
