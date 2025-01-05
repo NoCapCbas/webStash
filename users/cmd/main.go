@@ -1,16 +1,17 @@
 package main
 
 import (
-	"log"	
-	"net/http"
-	"fmt"
+	"context"
 	"database/sql"
+	"fmt"
+	"log"
+	"net/http"
 
-	_ "github.com/lib/pq"       // PostgreSQL driver
 	"github.com/go-redis/redis/v8" // Redis client
+	_ "github.com/lib/pq"          // PostgreSQL driver
 
-	"github.com/NoCapCbas/webStash/internal/users"
 	"github.com/NoCapCbas/webStash/internal/common"
+	"github.com/NoCapCbas/webStash/users"
 )
 
 // Configuration variables, temporarily hard coded
@@ -40,18 +41,36 @@ func main() {
 	redisClient := connectRedis()
 	defer redisClient.Close()
 	fmt.Println("Connected to Redis!")
-	 
+
 	// Initialize publisher
-	publisher := common.NewPublisher(redisClient)	
+	publisher := common.NewPublisher(redisClient)
+
+	// Initialize subscriber
+	subscriber := common.NewSubscriber(redisClient)
 
 	// Initialize the repo
 	userRepo := users.NewUserRepository(pgConn)
-	
+
 	// Initialize the service
 	userService := users.NewUserService(userRepo, publisher)
 
-	// Initialize the handler
+	// Initialize the http handler
 	userHandler := users.NewUserHandler(userService)
+
+	// Initialize the event handler
+	eventHandler := users.NewEventHandler(userService)
+
+	// Subscribe to the user.created channel
+	err = subscriber.Subscribe(context.Background(), "users")
+	if err != nil {
+		log.Fatalf("Failed to subscribe to users channel: %v", err)
+	}
+
+	// Start a goroutine to listen for messages
+	subscriber.Start(context.Background(), eventHandler)
+
+	// Set up event routes /{service}/events
+	http.HandleFunc("/users/events", userHandler.EventTypesHandler)
 
 	// Set up general user routes /{service}/{event}
 	http.HandleFunc("/users/signup", userHandler.SignUpUserHandler)
@@ -62,9 +81,9 @@ func main() {
 	http.HandleFunc("users/deactivate/{id}", userHandler.DeactivateUserHandler)
 	http.HandleFunc("users/reactivate/{id}", userHandler.ReactivateUserHandler)
 
-  // Start the server
+	// Start the server
 	log.Println("Starting server on port 8080")
-	err = http.ListenAndServe(":8080", nil)	
+	err = http.ListenAndServe(":8080", nil)
 	if err != nil {
 		log.Fatal(err)
 	}
