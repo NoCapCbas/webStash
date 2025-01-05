@@ -71,8 +71,6 @@ services:
     command: ["redis-server", "--appendonly", "yes"] # Enable AOF persistence
     volumes:
       - ./data/redis:/data # Persistent storage for Redis
-    ports:
-      - "6379:6379"
 
   redis-insight:
     image: redislabs/redisinsight:latest
