@@ -5,17 +5,17 @@ import (
 	"log"
 
 	"github.com/NoCapCbas/webStash/internal/db/seed"
-	_ "github.com/lib/pq"
+	_ "github.com/mattn/go-sqlite3"
 )
 
-type PostgresDB struct {
+type SqliteDB struct {
 	DB *sql.DB
 }
 
-func NewPostgresDB(connStr string) (*PostgresDB, error) {
-	log.Printf("Connecting to PostgresDB (%s)", connStr)
+func NewSqliteDB(dataSourceName string) (*SqliteDB, error) {
+	log.Printf("Connecting to SqliteDB (%s)", dataSourceName)
 
-	db, err := sql.Open("postgres", connStr)
+	db, err := sql.Open("sqlite3", dataSourceName)
 	if err != nil {
 		return nil, err
 	}
@@ -40,5 +40,5 @@ func NewPostgresDB(connStr string) (*PostgresDB, error) {
 		return nil, err
 	}
 
-	return &PostgresDB{DB: db}, nil
+	return &SqliteDB{DB: db}, nil
 }
