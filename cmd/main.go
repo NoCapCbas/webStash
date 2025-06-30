@@ -41,7 +41,6 @@ var (
 )
 
 func indexHandler(w http.ResponseWriter, r *http.Request) {
-
 	// main portfolio handler
 
 	// parse template file
@@ -72,7 +71,6 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 		log.Println("Error executing template: ", err)
 		http.Error(w, "Could not render template", http.StatusInternalServerError)
 	}
-
 }
 
 func loginHandler(w http.ResponseWriter, r *http.Request) {
@@ -417,9 +415,32 @@ func signoutHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+	log.Println("Starting webStash server...")
+	log.Println("Initializing database...")
 	// Initialize database
 	var err error
-	postgres, err := db.NewPostgresDB(os.Getenv("DATABASE_URL"))
+	// database, err := db.NewPostgresDB(os.Getenv("DATABASE_URL"))
+	// if err != nil {
+	// 	log.Fatal("Failed to connect to database:", err)
+	// }
+
+	// Set environment variables for SQLite DB
+	dbPath := os.Getenv("DATABASE_URL")
+	if dbPath == "" {
+		dbPath = "./webstash.db"
+		os.Setenv("DATABASE_URL", dbPath)
+	}
+
+	// Create SQLite DB file if it does not exist
+	if _, err := os.Stat(dbPath); os.IsNotExist(err) {
+		file, err := os.Create(dbPath)
+		if err != nil {
+			log.Fatalf("Failed to create SQLite DB file: %v", err)
+		}
+		file.Close()
+	}
+
+	database, err := db.NewSqliteDB(os.Getenv("DATABASE_URL"))
 	if err != nil {
 		log.Fatal("Failed to connect to database:", err)
 	}
@@ -427,17 +448,17 @@ func main() {
 	// Seed database, if in development mode
 	if os.Getenv("ENV") == "development" {
 		log.Println("Seeding database")
-		seed.CreateUsersTable(postgres.DB)
-		seed.CreateBookmarksTable(postgres.DB)
-		seed.CreateSessionsTable(postgres.DB)
-		seed.CreateMagicLinksTable(postgres.DB)
+		seed.CreateUsersTable(database.DB)
+		seed.CreateBookmarksTable(database.DB)
+		seed.CreateSessionsTable(database.DB)
+		seed.CreateMagicLinksTable(database.DB)
 	}
 
 	// Initialize repositories
-	bookmarkRepo := repos.NewBookmarkRepo(postgres.DB)
-	userRepo := repos.NewUserRepo(postgres.DB)
-	sessionRepo := repos.NewSessionRepo(postgres.DB)
-	magicLinkRepo := repos.NewMagicLinkRepo(postgres.DB)
+	bookmarkRepo := repos.NewBookmarkRepo(database.DB)
+	userRepo := repos.NewUserRepo(database.DB)
+	sessionRepo := repos.NewSessionRepo(database.DB)
+	magicLinkRepo := repos.NewMagicLinkRepo(database.DB)
 
 	// Initialize services
 	authService = services.NewAuthService(magicLinkRepo, sessionRepo, userRepo)
