@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"errors"
+	"log"
 	"time"
 
 	"github.com/NoCapCbas/webStash/internal/db/repos"
@@ -27,12 +28,14 @@ func (s *AuthService) GenerateMagicLink(email string) (*repos.MagicLink, error) 
 	// Generate random token
 	token, err := generateRandomToken()
 	if err != nil {
+		log.Println("Error generating token:", err)
 		return nil, err
 	}
 
 	expiresAt := time.Now().Add(60 * time.Minute)
 	ml, err := s.magicLinkRepo.Create(email, token, expiresAt)
 	if err != nil {
+		log.Println("Error creating magic link:", err)
 		return nil, err
 	}
 

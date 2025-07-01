@@ -38,7 +38,6 @@ var (
 )
 
 func indexHandler(w http.ResponseWriter, r *http.Request) {
-
 	// main portfolio handler
 
 	// parse template file
@@ -69,7 +68,6 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 		log.Println("Error executing template: ", err)
 		http.Error(w, "Could not render template", http.StatusInternalServerError)
 	}
-
 }
 
 func loginHandler(w http.ResponseWriter, r *http.Request) {
@@ -89,6 +87,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 	log.Println("Generating magic link for", req.Email)
 	magicLink, err := authService.GenerateMagicLink(req.Email)
 	if err != nil {
+		log.Println("Error generating magic link", err)
 		http.Error(w, "Error generating magic link", http.StatusInternalServerError)
 		return
 	}
@@ -107,17 +106,19 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Send the magic link email
 	log.Println("Sending magic link email", magicLinkURL, mailgunService)
-	err = mailgunService.SendMagicLink(req.Email, magicLinkURL)
-	if err != nil {
-		log.Printf("Failed to send magic link: %v", err)
-		http.Error(w, "Error sending magic link", http.StatusInternalServerError)
-		return
-	}
+	// err = mailgunService.SendMagicLink(req.Email, magicLinkURL)
+	// if err != nil {
+	// 	log.Printf("Failed to send magic link: %v", err)
+	// 	http.Error(w, "Error sending magic link", http.StatusInternalServerError)
+	// 	return
+	// }
 
 	log.Println("Magic link sent to email")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(map[string]string{
-		"message": "Magic link sent to email",
+		// "message":    "Magic link sent to email",
+		"message":    "Magic link displayed due to email service being offline",
+		"magic_link": magicLinkURL,
 	})
 }
 
@@ -308,23 +309,38 @@ func bookmarkReadHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	// Initialize database
+	log.Println("Starting webStash server...")
 	var err error
-	postgres, err := db.NewPostgresDB(os.Getenv("DATABASE_URL"))
+	os.Setenv("DATABASE_URL", "./webstash.sqlite3")
+	database, err := db.NewSqliteDB(os.Getenv("DATABASE_URL"))
 	if err != nil {
 		log.Fatal("Failed to connect to database:", err)
 	}
+	log.Println("Connected to database successfully")
 
+	// if database_url does not exist, create it
+	if _, err := os.Stat(os.Getenv("DATABASE_URL")); os.IsNotExist(err) {
+		file, err := os.Create(os.Getenv("DATABASE_URL"))
+		if err != nil {
+			log.Fatal("Failed to create database file:", err)
+		}
+		file.Close()
+		log.Println("Created new SQLite database file.")
+	}
 	// Initialize repositories
-	bookmarkRepo := repos.NewBookmarkRepo(postgres.DB)
-	userRepo := repos.NewUserRepo(postgres.DB)
-	sessionRepo := repos.NewSessionRepo(postgres.DB)
-	magicLinkRepo := repos.NewMagicLinkRepo(postgres.DB)
+	log.Println("Initializing repositories...")
+	bookmarkRepo := repos.NewBookmarkRepo(database.DB)
+	userRepo := repos.NewUserRepo(database.DB)
+	sessionRepo := repos.NewSessionRepo(database.DB)
+	magicLinkRepo := repos.NewMagicLinkRepo(database.DB)
+	log.Println("Repositories initialized successfully")
 
 	// Initialize services
+	log.Println("Initializing services...")
 	authService = services.NewAuthService(magicLinkRepo, sessionRepo, userRepo)
 	mailgunService = services.NewMailgunService()
 	bookmarkService = services.NewBookmarkService(bookmarkRepo)
+	log.Println("Services initialized successfully")
 
 	// serve static files
 	fs := http.FileServer(http.Dir("static"))

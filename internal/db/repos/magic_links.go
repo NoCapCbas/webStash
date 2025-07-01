@@ -2,6 +2,7 @@ package repos
 
 import (
 	"database/sql"
+	"log"
 	"time"
 )
 
@@ -30,6 +31,7 @@ func (r *MagicLinkRepo) Create(email string, token string, expiresAt time.Time) 
 		RETURNING id, email, token, used, expires_at, created_at
 	`, email, token, expiresAt).Scan(&ml.ID, &ml.Email, &ml.Token, &ml.Used, &ml.ExpiresAt, &ml.CreatedAt)
 	if err != nil {
+		log.Printf("Error creating magic link for email %s: %v", email, err)
 		return nil, err
 	}
 	return &ml, nil
