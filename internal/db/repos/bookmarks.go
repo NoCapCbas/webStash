@@ -26,8 +26,7 @@ func NewBookmarkRepo(db *sql.DB) *BookmarkRepo {
 }
 
 func (r *BookmarkRepo) Create(bookmark *Bookmark) error {
-	return r.db.QueryRow(`
-		INSERT INTO bookmarks (user_id, url, title, description, public)
+	return r.db.QueryRow(` INSERT INTO bookmarks (user_id, url, title, description, public)
 		VALUES ($1, $2, $3, $4, $5)
 		RETURNING id, created_at, updated_at, click_count
 	`, bookmark.UserID, bookmark.URL, bookmark.Title, bookmark.Description, bookmark.Public).

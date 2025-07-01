@@ -160,23 +160,8 @@ func verifyHandler(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/view/bookmarks", http.StatusSeeOther)
 }
 
-type Bookmark struct {
-	ID          string
-	Title       string
-	URL         string
-	Description string
-	Tags        []string
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
-	Public      bool
-	ClickCount  int
-}
-
-var bookmarks []Bookmark
-
-func bookmarkViewHandler(w http.ResponseWriter, r *http.Request) {
-	log.Println("Bookmark view handler")
-
+func addDefaultBookmarksHandler(w http.ResponseWriter, r *http.Request) {
+	log.Println("Adding default bookmarks")
 	sessionTokenCookie, err := r.Cookie("session_token")
 	if err != nil {
 		log.Println("No session token cookie found: ", err)
@@ -191,39 +176,75 @@ func bookmarkViewHandler(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/404", http.StatusSeeOther)
 		return
 	}
-	bookmarks = append(bookmarks, Bookmark{
-		ID:          "1",
+
+	user, err := authService.GetUserByEmail(email)
+	if err != nil {
+		log.Println("Error retrieving user by email: ", err)
+		http.Error(w, "Error retrieving user", http.StatusInternalServerError)
+	}
+
+	bookmarkService.CreateBookmark(&repos.Bookmark{
+		UserID:      user.ID,
 		Title:       "Google",
 		URL:         "https://google.com",
 		Description: "Google's homepage",
-		Tags:        []string{"search", "internet"},
 		CreatedAt:   time.Now(),
 		UpdatedAt:   time.Now(),
 		Public:      false,
 		ClickCount:  0,
 	})
 
-	bookmarks = append(bookmarks, Bookmark{
-		ID:          "2",
+	bookmarkService.CreateBookmark(&repos.Bookmark{
+		UserID:      user.ID,
 		Title:       "Github",
 		URL:         "https://github.com",
 		Description: "Github's homepage",
-		Tags:        []string{"code", "git"},
 		CreatedAt:   time.Now(),
 		UpdatedAt:   time.Now(),
 		Public:      false,
 		ClickCount:  0,
 	})
+
+	http.Redirect(w, r, "/view/bookmarks", http.StatusSeeOther)
+}
+
+func bookmarkViewHandler(w http.ResponseWriter, r *http.Request) {
+	log.Println("Bookmark view handler")
+
+	sessionTokenCookie, err := r.Cookie("session_token")
+	if err != nil {
+		log.Println("No session token cookie found: ", err)
+		http.Redirect(w, r, "/404", http.StatusSeeOther)
+		return
+	}
+	// Use a separate function to validate sessions
+	email, err := authService.ValidateSession(sessionTokenCookie.Value)
+	if err != nil {
+		log.Println("Invalid session token: ", err)
+		http.Redirect(w, r, "/404", http.StatusSeeOther)
+		return
+	}
+	user, err := authService.GetUserByEmail(email)
+	if err != nil {
+		log.Println("Error retrieving user by email: ", err)
+		http.Error(w, "Error retrieving user", http.StatusInternalServerError)
+	}
+	bookmarks, err := bookmarkService.GetBookmarksByUserID(user.ID)
+	if err != nil {
+		log.Println("Error retrieving bookmarks: ", err)
+		http.Error(w, "Error retrieving bookmarks", http.StatusInternalServerError)
+	}
+	log.Printf("Retrieved %d bookmarks for user %s", len(bookmarks), email)
 
 	// Render the account template with the email
 	data := struct {
 		Email     string
-		Bookmarks []Bookmark
+		Bookmarks []repos.Bookmark
 	}{
 		Email:     email,
 		Bookmarks: bookmarks,
 	}
-
+	log.Println("Rendering bookmarks view template", data)
 	if err := templates.ExecuteTemplate(w, "index.html", data); err != nil {
 		http.Error(w, "Failed to render template", http.StatusInternalServerError)
 		return
@@ -286,6 +307,7 @@ func bookmarkDeleteHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid request", http.StatusBadRequest)
 		return
 	}
+	log.Printf("Deleting bookmark with ID %d for user %d", bookmark.ID, bookmark.UserID)
 	bookmarkService.DeleteBookmark(bookmark.ID, bookmark.UserID)
 }
 
@@ -312,12 +334,6 @@ func main() {
 	log.Println("Starting webStash server...")
 	var err error
 	os.Setenv("DATABASE_URL", "./webstash.sqlite3")
-	database, err := db.NewSqliteDB(os.Getenv("DATABASE_URL"))
-	if err != nil {
-		log.Fatal("Failed to connect to database:", err)
-	}
-	log.Println("Connected to database successfully")
-
 	// if database_url does not exist, create it
 	if _, err := os.Stat(os.Getenv("DATABASE_URL")); os.IsNotExist(err) {
 		file, err := os.Create(os.Getenv("DATABASE_URL"))
@@ -327,6 +343,13 @@ func main() {
 		file.Close()
 		log.Println("Created new SQLite database file.")
 	}
+
+	database, err := db.NewSqliteDB(os.Getenv("DATABASE_URL"))
+	if err != nil {
+		log.Fatal("Failed to connect to database:", err)
+	}
+	log.Println("Connected to database successfully")
+
 	// Initialize repositories
 	log.Println("Initializing repositories...")
 	bookmarkRepo := repos.NewBookmarkRepo(database.DB)
@@ -359,6 +382,9 @@ func main() {
 	http.HandleFunc("/api/v1/bookmarks/update", bookmarkUpdateHandler)
 	http.HandleFunc("/api/v1/bookmarks/delete", bookmarkDeleteHandler)
 	http.HandleFunc("/api/v1/bookmarks/read", bookmarkReadHandler)
+
+	//
+	http.HandleFunc("/api/v1/bookmarks/add-default", addDefaultBookmarksHandler)
 
 	// start server
 	log.Println("Listening on port :8080...")

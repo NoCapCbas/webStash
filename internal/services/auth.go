@@ -126,3 +126,9 @@ func (s *AuthService) CreateUser(email string) error {
 	_, err := s.userRepo.Create(email, 0)
 	return err
 }
+
+func (s *AuthService) GetUserByEmail(email string) (*repos.User, error) {
+	// get user by email
+	user, err := s.userRepo.GetByEmail(email)
+	return user, err
+}

@@ -33,6 +33,15 @@
             <div class="flex space-x-4">
               <!-- Current: "bg-gray-900 text-white", Default: "text-gray-300 hover:bg-gray-700 hover:text-white" -->
               <a href="/view/bookmarks" class="rounded-md bg-blue-500 px-3 py-2 text-sm font-medium text-white hover:bg-blue-600" aria-current="page">Dashboard</a>
+              <a 
+                href="#" class="rounded-md px-3 py-2 text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
+                x-data
+                @click.prevent="
+                    fetch('/api/v1/bookmarks/add-default', { method: 'POST' })
+                        .then(() => window.location.reload())
+                "
+              >Add Default Bookmarks</a>
+
               <!-- <a href="#" class="rounded-md px-3 py-2 text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white">Team</a> -->
               <!-- <a href="#" class="rounded-md px-3 py-2 text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white">Projects</a> -->
               <!-- <a href="#" class="rounded-md px-3 py-2 text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white">Calendar</a> -->
