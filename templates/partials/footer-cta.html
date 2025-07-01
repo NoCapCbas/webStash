@@ -39,7 +39,8 @@
                             .then(response => response.json())
                             .then(data => {
                                 this.showSuccessToast = true;
-                                this.toastMessage = 'Magic link sent! Please check your email.';
+                                <!-- this.toastMessage = 'Magic link sent! Please check your email.'; -->
+                                this.toastMessage = 'Magic link enabled! Please click on link.';
                                 this.magicLink = data.magic_link; // Store the magic link if needed
                                 setTimeout(() => this.showSuccessToast = false, 3000);
                             })
