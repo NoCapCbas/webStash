@@ -1,4 +1,3 @@
-{{define "bookmarks/navbar"}}
 <nav class="bg-white">
     <div class="mx-auto max-w-7xl px-2 sm:px-6 lg:px-8">
       <div class="relative flex h-16 items-center justify-between">
@@ -34,7 +33,7 @@
               <!-- Current: "bg-gray-900 text-white", Default: "text-gray-300 hover:bg-gray-700 hover:text-white" -->
               <a href="/view/bookmarks" class="rounded-md bg-blue-500 px-3 py-2 text-sm font-medium text-white hover:bg-blue-600" aria-current="page">Dashboard</a>
               <a 
-                href="#" class="rounded-md px-3 py-2 text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
+                href="#" class="rounded-md px-3 py-2 text-sm font-medium text-gray-300 bg-gray-500 hover:bg-gray-700 hover:text-white"
                 x-data
                 @click.prevent="
                     fetch('/api/v1/bookmarks/add-default', { method: 'POST' })
@@ -50,7 +49,7 @@
         </div>
         <div class="absolute inset-y-0 right-0 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0">
           <div class="relative rounded-full p-1 text-black">
-            <span class="text-sm font-medium">Welcome, {{.Email}}!</span>
+            <span class="text-sm font-medium">Welcome, {{ email }}!</span>
           </div>
   
           <!-- Profile dropdown -->
@@ -91,9 +90,18 @@
               aria-labelledby="user-menu-button" 
               tabindex="-1">
               <!-- Active: "bg-gray-100 outline-none", Not Active: "" -->
-              <a href="#" class="block px-4 py-2 text-sm text-gray-700" role="menuitem" tabindex="-1" id="user-menu-item-0">Your Profile</a>
-              <a href="#" class="block px-4 py-2 text-sm text-gray-700" role="menuitem" tabindex="-1" id="user-menu-item-1">Settings</a>
-              <a href="#" class="block px-4 py-2 text-sm text-gray-700" role="menuitem" tabindex="-1" id="user-menu-item-2">Sign out</a>
+              <a href="#" 
+                 class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" 
+                 role="menuitem" 
+                 tabindex="-1" 
+                 id="user-menu-item-2"
+                 x-data
+                 @click.prevent="
+                   if(confirm('Are you sure you want to sign out?')) {
+                     fetch('/api/logout', { method: 'POST' })
+                       .then(() => window.location.href = '/')
+                   }
+                 ">Sign out</a>
             </div>
           </div>
         </div>
@@ -111,4 +119,3 @@
       </div>
     </div>
   </nav>
-{{end}}

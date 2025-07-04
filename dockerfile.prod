@@ -1,34 +1,29 @@
-# Use the official Golang image as the base image
-FROM golang:1.22-alpine AS builder
+# Use the official Python image as the base image
+FROM python:3.11-slim
 
 # Set the working directory
 WORKDIR /app
 
-# Copy go mod file
-COPY go.mod ./
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    sqlite3 \
+    && rm -rf /var/lib/apt/lists/*
 
-# Download all dependencies
-RUN go mod download
+# Copy requirements file
+COPY requirements.txt ./
+
+# Install Python dependencies
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy the source code
 COPY . .
 
-# Build the application
-RUN go build -o main ./cmd
+# Create a non-root user
+RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app
+USER appuser
 
-# Use a minimal alpine image for the final stage
-FROM alpine:3.14
+# Expose port
+EXPOSE 8080
 
-# Set the working directory
-WORKDIR /root/
-
-# Copy the binary from the builder stage
-COPY --from=builder /app/main .
-
-# Copy any additional necessary files (e.g., templates, static files)
-COPY --from=builder /app/templates ./templates
-COPY --from=builder /app/static ./static
-
-
-# Run the binary
-CMD ["./main"]
+# Run the application with uvicorn
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8080"]

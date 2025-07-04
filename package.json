@@ -1,4 +1,22 @@
 {
+  "name": "webstash",
+  "version": "2.0.0",
+  "description": "A minimalist bookmark management system built with FastAPI and Python",
+  "scripts": {
+    "dev": "npx tailwindcss -i ./static/css/input.css -o ./static/css/output.css --watch",
+    "build": "npx tailwindcss -i ./static/css/input.css -o ./static/css/output.css --minify",
+    "start": "uvicorn main:app --host 0.0.0.0 --port 8080",
+    "start:dev": "uvicorn main:app --host 0.0.0.0 --port 8080 --reload"
+  },
+  "keywords": [
+    "bookmarks",
+    "fastapi",
+    "python",
+    "sqlite",
+    "web-app"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
   "devDependencies": {
     "tailwindcss": "^3.4.10"
   }

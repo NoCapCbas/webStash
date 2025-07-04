@@ -8,7 +8,7 @@
 </head>
 <body class="bg-gray-50 flex flex-col items-center justify-center">
 
-    {{ template "partials/nav" . }}
+    {% include "partials/nav.html" %}
 
     <div class="max-w-4xl mx-auto px-4 py-12">
         <h1 class="text-4xl font-bold mb-8">Terms and Policies</h1>
@@ -71,6 +71,6 @@
         </div>
     </div>
 
-    {{ template "partials/footer" . }}
+    {% include "partials/footer.html" %}
 </body>
 </html>

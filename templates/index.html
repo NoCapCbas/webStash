@@ -20,22 +20,22 @@
 <body class="bg-white flex flex-col items-center justify-center">
     <!-- <div class="w-full max-w-3xl sm:px-6 md:px-8 lg:px-12 py-8 overflow-x-hidden"> -->
         <!-- Navigation Menu Section-->
-        {{ template "partials/nav" . }}      
+        {% include "partials/nav.html" %}      
 
         <!-- Hero Section -->
-        {{ template "partials/hero" . }}
+        {% include "partials/hero.html" %}
 
         <!-- About Section -->
-        {{ template "partials/features" . }}
+        {% include "partials/features.html" %}
 
         <!-- Pricing Section -->
-        {{ template "partials/pricing" . }}
+        {% include "partials/pricing-1-plan.html" %}
 
         <!-- Footer CTA Section -->
-        {{ template "partials/footer-cta" . }}
+        {% include "partials/footer-cta.html" %}
 
         <!-- Footer Section -->
-        {{ template "partials/footer" . }}
+        {% include "partials/footer.html" %}
 
     <!-- </div> -->
 </body>

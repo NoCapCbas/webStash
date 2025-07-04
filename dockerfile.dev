@@ -1,20 +1,25 @@
-# Use the official Golang image as the base image
-FROM golang:1.23-alpine
+# Use the official Python image as the base image
+FROM python:3.11-slim
 
 # Set the working directory
 WORKDIR /app
 
-# Install Air for live reloading
-RUN go install github.com/air-verse/air@latest
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    sqlite3 \
+    && rm -rf /var/lib/apt/lists/*
 
-# Copy go mod and sum files
-COPY go.mod ./
+# Copy requirements file
+COPY requirements.txt ./
 
-# Download all dependencies
-RUN go mod download
+# Install Python dependencies
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy the source code
 COPY . .
 
-# Run the application using Air for live reloading
-CMD ["air", "-c", ".air.toml"]
+# Expose port
+EXPOSE 8080
+
+# Run the application with uvicorn and auto-reload
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8080", "--reload"]
