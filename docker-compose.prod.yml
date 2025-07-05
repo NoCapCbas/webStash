@@ -1,6 +1,6 @@
 services:
   portfolio:
-    image: ghcr.io/nocapcbas/portfolio:prod
+    image: ghcr.io/nocapcbas/webstash:prod
     labels:
       # - "traefik.enable=true"
       # - "traefik.http.routers.portfolio.rule=Host(`${HOST_DOMAIN}`)"
