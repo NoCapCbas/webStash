@@ -54,7 +54,8 @@ async def login(request: LoginRequest, db: Session = Depends(get_db)):
         auth_service.create_user(request.email, db)
         
         # Generate the full magic link URL
-        magic_link_url = f"http://localhost:8080/verify?token={magic_link.token}"
+        HOST_DOMAIN = os.getenv('HOST_DOMAIN', 'localhost:8080')
+        magic_link_url = f"http://{HOST_DOMAIN}/verify?token={magic_link.token}"
         
         logger.info("Magic link sent to email")
         return JSONResponse({
