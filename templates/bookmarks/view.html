@@ -219,10 +219,10 @@
                 @click="editBookmark({
                         id: {{ bookmark.id }},
                         user_id: {{ bookmark.user_id }},
-                        title: '{{ bookmark.title | escape }}',
-                        url: '{{ bookmark.url | escape }}',
-                        description: '{{ (bookmark.description) | escape }}',
-                        public: {{ 'true' if bookmark.public else 'false' }},
+                        title: &quot;{{ bookmark.title | replace('"', '&quot;') }}&quot;,
+                        url: &quot;{{ bookmark.url | replace('"', '&quot;') }}&quot;,
+                        description: &quot;{{ (bookmark.description or '') | replace('"', '&quot;') }}&quot;,
+                        public: {{ bookmark.public | lower }},
                     })"            
             >
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
