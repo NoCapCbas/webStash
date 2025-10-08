@@ -1,28 +1,27 @@
-# Virtual environment
-venv/
+# build output
+dist/
+.output/
 
-# Compiled Python files
-*.pyc
-__pycache__/
+# generated types
+.astro/
 
-# Logs
-*.log
+# dependencies
+node_modules/
 
-# Ignore node_modules directory
-**/node_modules
+# logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
 
-# Ignore .next directory (optional)
-**/.next
+# environment variables
+.env
+.env.production
 
+# macOS-specific files
 .DS_Store
 
-# Ignore .env files
-**/.env
-.env
-
-# 
-package-lock.json
-
-# Ignore pgadmin
-pgadmin/servers.json
+# wrangler
+.wrangler/
+.dev.vars
 

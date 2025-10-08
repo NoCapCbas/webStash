@@ -1,70 +1,48 @@
-# Project Intention
+# webStash
 
-This project serves as a bookmarking management software, a hub for users to store their favorite web pages and have access to them from any device with internet access.
+A bookmark management application built with Astro and Cloudflare Workers.
 
-# Technology Used to Develop this Project
+## Features
 
-- golang
-- alpinejs
-- tailwindcss
+- Save and organize your favorite websites
+- Full-text search across bookmarks
+- Tags and categories
+- User authentication
+- Deployed on Cloudflare Workers
 
-# Production Infrastructure Overview
-
-- Traefik, as reverse-proxy
-- Github workflow, for auto image package
-- Watchtower, for auto deployment from image package
-
-# Development
-
-## Frontend
-
-### to install dependencies
+## Quick Start
 
 ```bash
+# Install dependencies
 npm install
+
+# Start local development server
+npm run dev
 ```
 
-### to refresh tailwind files
+Visit `http://localhost:4321` and create an account to start saving bookmarks!
+
+### Local Development
+
+**Note for macOS 12.x users:** The app uses an in-memory mock runtime for local development on older macOS versions. Your data will reset when you restart the dev server, but all features work normally. When deployed to Cloudflare, it uses the real D1 database.
+
+For macOS 13.5+ users, you can enable the Cloudflare Workers runtime by setting `platformProxy.enabled: true` in `astro.config.mjs`.
+
+### Production Deployment
+
+See [DEPLOYMENT.md](./DEPLOYMENT.md) for detailed deployment instructions.
 
 ```bash
-npx tailwindcss -i ./static/css/input.css -o ./static/css/output.css --watch
+# Build for production
+npm run build
+
+# Deploy to Cloudflare
+npm run deploy
 ```
 
-## Backend
+## Tech Stack
 
-### run the project
-
-```bash
-go run ./cmd/main.go
-```
-
-## To add a new project
-
-copy the templates from templates/projects/
-
-# Deployment
-
-Use example script(init-deployment.sh) to run image
-
-- don't forget to replace placeholder variables
-This script is only for initial deployment, subsequent changes to repo will be handled by
-new pushes to image package, and pulled by watchtower service for auto deployment
-
-```shell
-# Export environment variables, replace placeholder variables
-export DEV_EMAIL=example@domain.com
-export HOST_DOMAIN=example.com
-
-# Run the Docker container with environment variables
-docker compose -f docker-compose.prod.yml up -d --build --force-recreate
-```
-
-To make the script executable, use the chmod command:
-
-```shell
-chmod +x init-deployment.sh
-```
-
-# Resources
-
-- icons, sourced from <https://heroicons.com/>
+- **Frontend**: Astro
+- **Backend**: Cloudflare Workers
+- **Database**: Cloudflare D1 (SQLite)
+- **Authentication**: Cloudflare Workers KV
