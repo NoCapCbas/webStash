@@ -1,5 +1,5 @@
 globalThis.process ??= {}; globalThis.process.env ??= {};
-import { a as getBookmark, u as updateBookmark, d as deleteBookmark } from '../../../chunks/db_Cs_0ya7l.mjs';
+import { a as getBookmark, u as updateBookmark, d as deleteBookmark } from '../../../chunks/db_SJnkQxxZ.mjs';
 export { renderers } from '../../../renderers.mjs';
 
 const GET = async ({ locals, params }) => {

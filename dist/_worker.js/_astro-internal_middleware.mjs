@@ -1,7 +1,7 @@
 globalThis.process ??= {}; globalThis.process.env ??= {};
-import { d as defineMiddleware, s as sequence } from './chunks/index_D5DjRt9R.mjs';
-import { g as getSession } from './chunks/auth_BoIW-EfV.mjs';
-import './chunks/astro-designed-error-pages_C-x_UzC0.mjs';
+import { d as defineMiddleware, s as sequence } from './chunks/index_Dz9XAQxe.mjs';
+import { g as getSession } from './chunks/auth_DxkeBhQK.mjs';
+import './chunks/astro-designed-error-pages_C0KMmoV3.mjs';
 
 class MockD1PreparedStatement {
   constructor(sql, params = []) {
@@ -23,9 +23,42 @@ class MockD1PreparedStatement {
     }
     if (this.sql.includes("SELECT * FROM bookmarks WHERE user_id")) {
       const userId = this.params[0];
-      const bookmarks = Array.from(db.values()).filter(
+      let bookmarks = Array.from(db.values()).filter(
         (item) => item._type === "bookmark" && item.user_id === userId
       );
+      if (this.params.length > 1) {
+        const searchPattern = this.params[1];
+        const searchTerm = searchPattern.replace(/%/g, "").toLowerCase();
+        if (this.sql.includes("title LIKE ? OR description LIKE ? OR url LIKE ? OR tags LIKE ?")) {
+          bookmarks = bookmarks.filter((item) => {
+            const title = (item.title || "").toLowerCase();
+            const description = (item.description || "").toLowerCase();
+            const url = (item.url || "").toLowerCase();
+            const tags = (item.tags || "").toLowerCase();
+            return title.includes(searchTerm) || description.includes(searchTerm) || url.includes(searchTerm) || tags.includes(searchTerm);
+          });
+        } else if (this.sql.includes("title LIKE ?")) {
+          bookmarks = bookmarks.filter((item) => {
+            const title = (item.title || "").toLowerCase();
+            return title.includes(searchTerm);
+          });
+        } else if (this.sql.includes("url LIKE ?")) {
+          bookmarks = bookmarks.filter((item) => {
+            const url = (item.url || "").toLowerCase();
+            return url.includes(searchTerm);
+          });
+        } else if (this.sql.includes("description LIKE ?")) {
+          bookmarks = bookmarks.filter((item) => {
+            const description = (item.description || "").toLowerCase();
+            return description.includes(searchTerm);
+          });
+        } else if (this.sql.includes("tags LIKE ?")) {
+          bookmarks = bookmarks.filter((item) => {
+            const tags = (item.tags || "").toLowerCase();
+            return tags.includes(searchTerm);
+          });
+        }
+      }
       return { results: bookmarks, success: true, meta: { changes: 0 } };
     }
     if (this.sql.includes("SELECT * FROM bookmarks WHERE id")) {
@@ -67,6 +100,19 @@ class MockD1PreparedStatement {
       });
       return { results: [], success: true, meta: { changes: 1 } };
     }
+    if (this.sql.includes("INSERT INTO feedback")) {
+      const [id, user_id, user_email, type, message, created_at] = this.params;
+      db.set(`feedback:${id}`, {
+        _type: "feedback",
+        id,
+        user_id,
+        user_email,
+        type,
+        message,
+        created_at
+      });
+      return { results: [], success: true, meta: { changes: 1 } };
+    }
     if (this.sql.includes("UPDATE bookmarks")) {
       const id = this.params[this.params.length - 2];
       const bookmark = db.get(`bookmark:${id}`);
@@ -89,28 +135,32 @@ class MockD1Database {
     return new MockD1PreparedStatement(sql);
   }
 }
+const globalKVStore = /* @__PURE__ */ new Map();
 class MockKVNamespace {
-  store = /* @__PURE__ */ new Map();
   async get(key) {
-    return this.store.get(key) || null;
+    return globalKVStore.get(key) || null;
   }
   async put(key, value, options) {
-    this.store.set(key, value);
+    globalKVStore.set(key, value);
   }
   async delete(key) {
-    this.store.delete(key);
+    globalKVStore.delete(key);
   }
 }
 if (typeof globalThis !== "undefined" && !globalThis.__MOCK_DB__) {
   globalThis.__MOCK_DB__ = /* @__PURE__ */ new Map();
 }
+let mockRuntimeInstance = null;
 function createMockRuntime() {
-  return {
-    env: {
-      DB: new MockD1Database(),
-      SESSIONS: new MockKVNamespace()
-    }
-  };
+  if (!mockRuntimeInstance) {
+    mockRuntimeInstance = {
+      env: {
+        DB: new MockD1Database(),
+        SESSIONS: new MockKVNamespace()
+      }
+    };
+  }
+  return mockRuntimeInstance;
 }
 
 const onRequest$2 = defineMiddleware(async ({ locals, cookies, url }, next) => {
@@ -127,7 +177,7 @@ const onRequest$2 = defineMiddleware(async ({ locals, cookies, url }, next) => {
       };
     }
   }
-  const protectedRoutes = ["/bookmarks", "/api/bookmarks"];
+  const protectedRoutes = ["/bookmarks", "/api/bookmarks", "/feedback", "/api/feedback"];
   const isProtectedRoute = protectedRoutes.some((route) => url.pathname.startsWith(route));
   if (isProtectedRoute && !locals.user && !url.pathname.startsWith("/api/")) {
     return Response.redirect(new URL("/login", url));

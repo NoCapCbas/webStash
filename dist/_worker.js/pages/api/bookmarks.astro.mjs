@@ -1,5 +1,5 @@
 globalThis.process ??= {}; globalThis.process.env ??= {};
-import { b as getBookmarks, e as createBookmark } from '../../chunks/db_Cs_0ya7l.mjs';
+import { b as getBookmarks, e as createBookmark } from '../../chunks/db_SJnkQxxZ.mjs';
 export { renderers } from '../../renderers.mjs';
 
 const GET = async ({ locals, url }) => {
@@ -10,7 +10,8 @@ const GET = async ({ locals, url }) => {
     });
   }
   const search = url.searchParams.get("search") || void 0;
-  const bookmarks = await getBookmarks(locals.runtime.env.DB, locals.user.id, search);
+  const filter = url.searchParams.get("filter") || "all";
+  const bookmarks = await getBookmarks(locals.runtime.env.DB, locals.user.id, search, filter);
   return new Response(JSON.stringify(bookmarks), {
     status: 200,
     headers: { "Content-Type": "application/json" }

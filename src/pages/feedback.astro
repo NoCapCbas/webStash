@@ -94,7 +94,7 @@ if (!Astro.locals.user) {
         body: JSON.stringify(data)
       });
 
-      const result = await response.json();
+      const result = await response.json() as { error?: string };
 
       if (response.ok) {
         success.textContent = 'Thank you for your feedback! We appreciate you helping us improve webStash.';

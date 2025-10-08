@@ -1,6 +1,6 @@
 globalThis.process ??= {}; globalThis.process.env ??= {};
-import { g as getUserByEmail, c as createUser } from '../../../chunks/db_Cs_0ya7l.mjs';
-import { h as hashPassword, c as createSession } from '../../../chunks/auth_BoIW-EfV.mjs';
+import { g as getUserByEmail, c as createUser } from '../../../chunks/db_SJnkQxxZ.mjs';
+import { h as hashPassword, c as createSession, a as createSessionCookie } from '../../../chunks/auth_DxkeBhQK.mjs';
 export { renderers } from '../../../renderers.mjs';
 
 const POST = async ({ locals, request }) => {
@@ -26,7 +26,7 @@ const POST = async ({ locals, request }) => {
       status: 201,
       headers: {
         "Content-Type": "application/json",
-        "Set-Cookie": `sessionId=${sessionId}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=${60 * 60 * 24 * 7}`
+        "Set-Cookie": createSessionCookie(sessionId)
       }
     });
   } catch (error) {

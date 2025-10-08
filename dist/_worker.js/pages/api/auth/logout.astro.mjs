@@ -1,5 +1,5 @@
 globalThis.process ??= {}; globalThis.process.env ??= {};
-import { d as deleteSession } from '../../../chunks/auth_BoIW-EfV.mjs';
+import { d as deleteSession, b as clearSessionCookie } from '../../../chunks/auth_DxkeBhQK.mjs';
 export { renderers } from '../../../renderers.mjs';
 
 const POST = async ({ locals, cookies }) => {
@@ -11,7 +11,7 @@ const POST = async ({ locals, cookies }) => {
     status: 200,
     headers: {
       "Content-Type": "application/json",
-      "Set-Cookie": "sessionId=; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=0"
+      "Set-Cookie": clearSessionCookie()
     }
   });
 };

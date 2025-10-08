@@ -1,13 +1,19 @@
 globalThis.process ??= {}; globalThis.process.env ??= {};
-import { c as createComponent, a as createAstro } from '../chunks/astro/server_CrZeW1zu.mjs';
+/* empty css                                     */
+import { c as createComponent, a as createAstro } from '../chunks/astro/server_COAJwCcf.mjs';
+import { d as deleteSession } from '../chunks/auth_DxkeBhQK.mjs';
 export { renderers } from '../renderers.mjs';
 
 const $$Astro = createAstro();
 const $$Logout = createComponent(async ($$result, $$props, $$slots) => {
   const Astro2 = $$result.createAstro($$Astro, $$props, $$slots);
   Astro2.self = $$Logout;
-  await fetch(new URL("/api/auth/logout", Astro2.url), {
-    method: "POST"
+  const sessionId = Astro2.cookies.get("sessionId")?.value;
+  if (sessionId && Astro2.locals.runtime?.env?.SESSIONS) {
+    await deleteSession(Astro2.locals.runtime.env.SESSIONS, sessionId);
+  }
+  Astro2.cookies.delete("sessionId", {
+    path: "/"
   });
   return Astro2.redirect("/");
 }, "/Users/cbas/Documents/code-projects/webStash/src/pages/logout.astro", void 0);
