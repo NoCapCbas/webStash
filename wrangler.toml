@@ -1,0 +1,12 @@
+name = "webstash"
+compatibility_date = "2024-12-01"
+pages_build_output_dir = "dist"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "webstash"
+database_id = "8aef6cdf-0f6d-4f7b-8493-4a7f350cc06d"
+
+[[kv_namespaces]]
+binding = "SESSIONS"
+id = "534a7277efec4c2d9c0e3812ece4a1e8"

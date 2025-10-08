@@ -1,0 +1,77 @@
+---
+import { getFaviconUrl, getDomain } from '../lib/favicon';
+
+interface Props {
+  id: string;
+  url: string;
+  title: string;
+  description?: string;
+  tags?: string[];
+  created_at: number;
+}
+
+const { id, url, title, description, tags, created_at } = Astro.props;
+
+const formatDate = (timestamp: number) => {
+  return new Date(timestamp * 1000).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric'
+  });
+};
+
+const faviconUrl = getFaviconUrl(url);
+const domain = getDomain(url);
+---
+
+<div class="bg-white rounded-lg border border-slate-200 p-5 hover:shadow-md transition-shadow" data-id={id}>
+  <div class="flex justify-between items-start mb-2">
+    <div class="flex items-start gap-3 flex-1">
+      <img
+        src={faviconUrl}
+        alt=""
+        class="w-6 h-6 mt-1 rounded flex-shrink-0"
+        onerror="this.style.display='none'"
+      />
+      <div class="flex-1 min-w-0">
+        <h3 class="text-lg font-semibold text-slate-900">
+          <a href={url} target="_blank" rel="noopener noreferrer" class="hover:text-blue-600 transition-colors">
+            {title}
+          </a>
+        </h3>
+        <p class="text-sm text-slate-500 mt-1">{domain}</p>
+      </div>
+    </div>
+    <div class="flex gap-2 ml-4">
+      <button
+        class="edit-btn text-sm px-3 py-1 text-green-600 hover:text-green-700 hover:bg-green-50 rounded transition-colors"
+        data-id={id}
+      >
+        Edit
+      </button>
+      <button
+        class="delete-btn text-sm px-3 py-1 text-red-600 hover:text-red-700 hover:bg-red-50 rounded transition-colors"
+        data-id={id}
+      >
+        Delete
+      </button>
+    </div>
+  </div>
+
+  {description && (
+    <p class="text-slate-700 mb-3 leading-relaxed ml-9">{description}</p>
+  )}
+
+  <div class="flex items-center justify-between flex-wrap gap-2 ml-9">
+    {tags && tags.length > 0 && (
+      <div class="flex gap-2 flex-wrap">
+        {tags.map(tag => (
+          <span class="px-2 py-1 text-xs bg-blue-50 text-blue-700 rounded-full">
+            {tag}
+          </span>
+        ))}
+      </div>
+    )}
+    <span class="text-sm text-slate-500">{formatDate(created_at)}</span>
+  </div>
+</div>

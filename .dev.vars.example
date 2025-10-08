@@ -1,0 +1,2 @@
+# This is an example file. Copy to .dev.vars for local development
+# No environment variables are required for local development with Cloudflare Workers

@@ -1,0 +1,16 @@
+---
+import { deleteSession } from '../lib/auth';
+
+const sessionId = Astro.cookies.get('sessionId')?.value;
+
+if (sessionId && Astro.locals.runtime?.env?.SESSIONS) {
+  await deleteSession(Astro.locals.runtime.env.SESSIONS, sessionId);
+}
+
+// Clear the session cookie
+Astro.cookies.delete('sessionId', {
+  path: '/'
+});
+
+return Astro.redirect('/');
+---

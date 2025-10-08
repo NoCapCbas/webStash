@@ -1,0 +1,105 @@
+---
+interface Props {
+  title: string;
+}
+
+const { title } = Astro.props;
+const user = Astro.locals.user;
+---
+
+<!doctype html>
+<html lang="en" class="h-full">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="description" content="webStash - Save your favorite websites" />
+    <meta name="viewport" content="width=device-width" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="generator" content={Astro.generator} />
+    <title>{title}</title>
+  </head>
+  <body class="h-full bg-slate-50 text-slate-900">
+    <div class="min-h-full">
+      <nav class="bg-white border-b border-slate-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div class="flex justify-between h-16">
+            <div class="flex items-center">
+              <a href="/" class="flex items-center">
+                <span class="text-xl font-semibold text-slate-900">webStash</span>
+              </a>
+            </div>
+            <div class="flex items-center space-x-6">
+              {user ? (
+                <>
+                  <a href="/bookmarks" class="text-slate-600 hover:text-slate-900 transition-colors">
+                    Bookmarks
+                  </a>
+                  <a href="/feedback" class="text-slate-600 hover:text-slate-900 transition-colors">
+                    Feedback
+                  </a>
+                  <div class="relative">
+                    <button
+                      id="userMenuButton"
+                      class="text-sm text-slate-600 hover:text-slate-900 transition-colors"
+                    >
+                      {user.email}
+                    </button>
+                    <div
+                      id="userMenu"
+                      class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-slate-200 py-1 z-50"
+                    >
+                      <a
+                        href="/logout"
+                        class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
+                      >
+                        Logout
+                      </a>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <a href="/login" class="text-slate-600 hover:text-slate-900 transition-colors">
+                    Login
+                  </a>
+                  <a href="/register" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                    Sign up
+                  </a>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      </nav>
+
+      <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <slot />
+      </main>
+    </div>
+
+    <script is:inline>
+      if (typeof window !== 'undefined') {
+        document.addEventListener('DOMContentLoaded', () => {
+          const userMenuButton = document.getElementById('userMenuButton');
+          const userMenu = document.getElementById('userMenu');
+
+          if (userMenuButton && userMenu) {
+            userMenuButton.addEventListener('click', (e) => {
+              e.stopPropagation();
+              userMenu.classList.toggle('hidden');
+            });
+
+            // Close dropdown when clicking outside
+            document.addEventListener('click', () => {
+              userMenu.classList.add('hidden');
+            });
+
+            // Prevent closing when clicking inside the menu
+            userMenu.addEventListener('click', (e) => {
+              e.stopPropagation();
+            });
+          }
+        });
+      }
+    </script>
+  </body>
+</html>
