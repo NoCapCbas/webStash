@@ -4,7 +4,7 @@ import { verifyPassword, createSession, createSessionCookie } from '../../../lib
 
 export const POST: APIRoute = async ({ locals, request }) => {
   try {
-    const data = await request.json();
+    const data = await request.json() as { email: string; password: string };
 
     if (!data.email || !data.password) {
       return new Response(JSON.stringify({ error: 'Email and password are required' }), {

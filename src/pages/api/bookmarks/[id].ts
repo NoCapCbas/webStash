@@ -33,7 +33,7 @@ export const PUT: APIRoute = async ({ locals, params, request }) => {
   }
 
   try {
-    const data = await request.json();
+    const data = await request.json() as { url?: string; title?: string; description?: string; tags?: string[] };
     const updated = await updateBookmark(locals.runtime.env.DB, params.id!, locals.user.id, data);
 
     if (!updated) {

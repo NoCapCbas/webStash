@@ -28,7 +28,7 @@ export const POST: APIRoute = async ({ locals, request }) => {
   }
 
   try {
-    const data = await request.json();
+    const data = await request.json() as { url: string; title: string; description?: string; tags?: string[] };
 
     if (!data.url || !data.title) {
       return new Response(JSON.stringify({ error: 'URL and title are required' }), {

@@ -1,5 +1,25 @@
 {
+  "name": "webstash",
+  "type": "module",
+  "version": "0.0.1",
+  "scripts": {
+    "dev": "astro dev",
+    "start": "astro dev",
+    "build": "astro check && astro build",
+    "preview": "astro preview",
+    "astro": "astro",
+    "deploy": "npm run build && wrangler pages deploy dist"
+  },
+  "dependencies": {
+    "@astrojs/check": "^0.9.4",
+    "@astrojs/cloudflare": "^11.1.0",
+    "@astrojs/tailwind": "^5.1.2",
+    "astro": "^4.16.18",
+    "tailwindcss": "^3.4.10",
+    "typescript": "^5.6.3"
+  },
   "devDependencies": {
-    "tailwindcss": "^3.4.10"
+    "@cloudflare/workers-types": "^4.20241127.0",
+    "wrangler": "^4.42.1"
   }
 }

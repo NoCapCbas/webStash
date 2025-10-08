@@ -9,7 +9,7 @@ export const POST: APIRoute = async ({ locals, request }) => {
   }
 
   try {
-    const data = await request.json();
+    const data = await request.json() as { type: string; message: string };
 
     if (!data.type || !data.message) {
       return new Response(JSON.stringify({ error: 'Type and message are required' }), {

@@ -204,7 +204,7 @@ const bookmarks = await getBookmarks(Astro.locals.runtime.env.DB, Astro.locals.u
         body: JSON.stringify(data)
       });
 
-      const result = await response.json();
+      const result = await response.json() as { error?: string };
 
       if (response.ok) {
         window.location.reload();
@@ -228,7 +228,7 @@ const bookmarks = await getBookmarks(Astro.locals.runtime.env.DB, Astro.locals.u
 
       try {
         const response = await fetch(`/api/bookmarks/${id}`);
-        const bookmark = await response.json();
+        const bookmark = await response.json() as { url: string; title: string; description?: string; tags?: string[] };
 
         if (response.ok) {
           isEditing = true;
@@ -269,7 +269,7 @@ const bookmarks = await getBookmarks(Astro.locals.runtime.env.DB, Astro.locals.u
 
   // Handle search
   const searchForm = document.getElementById('searchForm') as HTMLFormElement;
-  const filterSelect = document.getElementById('filterSelect') as HTMLSelectElement;
+  const filterSelect = document.getElementById('filterSelect') as unknown as HTMLSelectElement;
 
   searchForm.addEventListener('submit', (e) => {
     e.preventDefault();
